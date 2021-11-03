@@ -9,7 +9,7 @@ CP = /bin/cp
 MKDIR = /bin/mkdir
 SED = /usr/bin/sed
 
-.PHONY: build bin-docker check clean build-docker docs install release test uninstall
+.PHONY: build bin-for-docker check clean build-in-docker docs install release test uninstall
 
 .DEFAULT_GOAL := help
 
@@ -22,21 +22,26 @@ clean:  ##         This will clean all local build artifacts
 	$(info Cleaning project...)
 	@rm -f $(PROGRAM)
 	@rm -rf docs/*
-	docker image prune --force
+	-docker rmi $(CONTAINER):$(APPVERSION)
 
 docs:   ##          Generate docs
 	@rm -rf docs/* && cd hugo && hugo && cd ..
 
-build: $(GOFILES)  ##         Build a local binary using APPVERSION parameter or CI as default
+build: $(PROGRAM)  ##         just an alias
+
+$(PROGRAM): $(GOFILES)  ##         Build a local binary using APPVERSION parameter or CI as default
 	go build -v -ldflags "-s -w -X github.com/CrunchyData/pg_featureserv/conf.setVersion=$(APPVERSION)"
 
-bin-docker:    ##    Build a local binary based off of a golang base docker image
-	sudo docker run --rm -v "$(PWD)":/usr/src/myapp:z -w /usr/src/myapp golang:$(GOVERSION) make APPVERSION=$(APPVERSION) build
+bin-for-docker: $(GOFILES)  ##         Build a local binary using APPVERSION parameter or CI as default (to be used in docker image)
+	CGO_ENABLED=0 go build -v -ldflags "-s -w -X github.com/CrunchyData/pg_featureserv/conf.setVersion=$(APPVERSION)"
 
-build-docker: $(PROGRAM) Dockerfile  ##  Generate a CentOS 7 container with APPVERSION tag, using binary from current environment
+build-in-docker: $(GOFILES)   ##    Build a local binary based off of a golang base docker image
+	docker run --rm -v "$(PWD)":/usr/src/myapp:z -w /usr/src/myapp golang:$(GOVERSION) make APPVERSION=$(APPVERSION) $(PROGRAM)
+
+docker: bin-for-docker Dockerfile  ##  Generate a CentOS 7 container with APPVERSION tag, using binary from current environment
 	docker build -f Dockerfile --build-arg VERSION=$(APPVERSION) -t $(CONTAINER):$(APPVERSION) .
 
-release: clean docs build build-docker  ##       Generate the docs, a local build, and then uses the local build to generate a CentOS 7 container
+release: clean docs $(PROGRAM) docker  ##       Generate the docs, a local build, and then uses the local build to generate a CentOS 7 container
 
 test:  ##          Run the tests locally
 	go test -v

@@ -52,29 +52,59 @@ Builds of the latest code:
 
 `pg_featureserv` is developed under Go 1.13.  It may also work with earlier versions.
 
-* Ensure the Go compiler is installed
+In the following, replace version `<VERSION>` with the `pg_featureserv` version are building against.
+
+### In Go environment
+
 * Download or clone this repository into `$GOPATH/src/github.com/CrunchyData/pg_featureserv`
-* To build the executable, run the following commands:
+* To build the executable, run the following commands in `$GOPATH/src/github.com/CrunchyData/pg_featureserv/`:
 ```bash
-cd $GOPATH/src/github.com/CrunchyData/pg_featureserv/
 go build
 ```
 * This creates a `pg_featureserv` executable in the application directory
 * (Optional) Run the unit tests using `go test ./...`
 
+### With `make`
+
+* Download or clone this repository into `pg_featureserv`
+* To build the executable, run the following commands in `pg_featureserv/`:
+  * with `go` installed:
+    ```bash
+    make APPVERSION=<VERSION> clean build
+    ```
+  * without `go` installed:
+    ```bash
+    make APPVERSION=<VERSION> clean build-in-docker
+    ```
+
 ### Building docker image
 
-You should build the executable with:
+#### Without `make`
+
+You should build the executable with the following command :
 ```bash
 CGO_ENABLED=0 go build
 ```
-To avoid runtime error `/lib64/libc.so.6: version 'GLIBC_2.XX' not found (required by ./pg_featureserv)`.
+The env var `CGO_ENABLED=0` is used to avoid runtime error `/lib64/libc.so.6: version 'GLIBC_2.XX' not found (required by ./pg_featureserv)`.
 
-Then, from `$GOPATH/src/github.com/CrunchyData/pg_featureserv/` directory, build the image with:
+Then, from `pg_featureserv` directory, build the image with:
 ```bash
-docker build -f container/Dockerfile --build-arg VERSION=<VERSION> -t crunchydata/pg_featureserv:<VERSION> ./
+docker build -f Dockerfile --build-arg VERSION=<VERSION> -t pramsey/pg_featureserv:<VERSION> ./
 ```
-Replace version `<VERSION>` with the `pg_featureserv` version are building against.
+
+#### With `make`
+```bash
+make APPVERSION=<VERSION> clean build-in-docker
+```
+
+#### Run the image
+
+To run using an image built above:
+```bash
+docker run -dt -e DATABASE_URL=postgres://user:pass@host/dbname -p 9000:9000 pramsey/pg_featureserv:<VERSION>
+```
+
+
 
 ## Configuring the service
 
