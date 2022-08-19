@@ -130,7 +130,12 @@ const sqlFmtFeatures = "SELECT %v %v FROM \"%s\".\"%s\" %v %v %v %s;"
 
 func sqlFeatures(tbl *Table, param *QueryParam) (string, []interface{}) {
 	geomCol := sqlGeomCol(tbl.GeometryColumn, tbl.Srid, param)
-	propCols := sqlColList(param.Columns, tbl.DbTypes, true)
+
+	tblTypes := make(map[string]string)
+	for k, c := range tbl.DbTypes {
+		tblTypes[k] = c.Type
+	}
+	propCols := sqlColList(param.Columns, tblTypes, true)
 	bboxFilter := sqlBBoxFilter(tbl.GeometryColumn, tbl.Srid, param.Bbox, param.BboxCrs)
 	attrFilter, attrVals := sqlAttrFilter(param.Filter)
 	cqlFilter := sqlCqlFilter(param.FilterSql)
@@ -186,7 +191,12 @@ const sqlFmtFeature = "SELECT %v %v FROM \"%s\".\"%s\" WHERE \"%v\" = $1 LIMIT 1
 
 func sqlFeature(tbl *Table, param *QueryParam) string {
 	geomCol := sqlGeomCol(tbl.GeometryColumn, tbl.Srid, param)
-	propCols := sqlColList(param.Columns, tbl.DbTypes, true)
+
+	tblTypes := make(map[string]string)
+	for k, c := range tbl.DbTypes {
+		tblTypes[k] = c.Type
+	}
+	propCols := sqlColList(param.Columns, tblTypes, true)
 	sql := fmt.Sprintf(sqlFmtFeature, geomCol, propCols, tbl.Schema, tbl.Table, tbl.IDColumn)
 	return sql
 }
