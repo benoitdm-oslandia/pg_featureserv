@@ -465,6 +465,19 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 							*/
 						},
 					},
+<<<<<<< HEAD
+=======
+					// TODO : schema feature à mettre en place !
+					// https://geojson.org/schema/Feature.json
+					// https://geojson.org/schema/GeoJSON.json
+					RequestBody: &openapi3.RequestBodyRef{
+						Value: &openapi3.RequestBody{
+							Description: "...",
+							Required:    true,
+							Content:     openapi3.NewContentWithJSONSchema(&FeatureSchema),
+						},
+					},
+>>>>>>> DRAFT : openapi / swagger
 					Responses: openapi3.Responses{
 						"200": &openapi3.ResponseRef{
 							Value: &openapi3.Response{
