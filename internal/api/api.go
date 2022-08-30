@@ -284,6 +284,48 @@ var CollectionsInfoSchema openapi3.Schema = openapi3.Schema{
 	},
 }
 
+// TODO Feature et Geometry
+// https://geojson.org/schema/Feature.json
+// https://geojson.org/schema/GeoJSON.json
+
+var GeometrySchema openapi3.Schema = openapi3.Schema{
+	Type:     "object",
+	Required: []string{"coordinates"},
+	Properties: map[string]*openapi3.SchemaRef{
+		"coordinates": {
+			Value: &openapi3.Schema{
+				Type:     "array",
+				MinItems: 2,
+				Items: &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type: "number",
+					},
+				},
+			},
+		},
+	},
+}
+
+var FeatureSchema openapi3.Schema = openapi3.Schema{
+	Type:     "object",
+	Required: []string{"geometry", "properties"},
+	Properties: map[string]*openapi3.SchemaRef{
+		"geometry": {
+			Value: &openapi3.Schema{
+				Type: "object",
+				Items: &openapi3.SchemaRef{
+					Value: &GeometrySchema,
+				},
+			},
+		},
+		"properties": {
+			Value: &openapi3.Schema{
+				Type: "object",
+			},
+		},
+	},
+}
+
 type Parameter struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
