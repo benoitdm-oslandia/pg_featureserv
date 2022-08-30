@@ -539,8 +539,6 @@ func (p *CQLParser) booleanValueExpression(_p int) (localctx IBooleanValueExpres
 	var _parentctx antlr.ParserRuleContext = p.GetParserRuleContext()
 	_parentState := p.GetState()
 	localctx = NewBooleanValueExpressionContext(p, p.GetParserRuleContext(), _parentState)
-	var _prevctx IBooleanValueExpressionContext = localctx
-	var _ antlr.ParserRuleContext = _prevctx // TODO: To prevent unused variable warning.
 	_startState := 2
 	p.EnterRecursionRule(localctx, 2, CQLParserRULE_booleanValueExpression, _p)
 
@@ -578,7 +576,6 @@ func (p *CQLParser) booleanValueExpression(_p int) (localctx IBooleanValueExpres
 			if p.GetParseListeners() != nil {
 				p.TriggerExitRuleEvent()
 			}
-			_prevctx = localctx
 			localctx = NewBooleanValueExpressionContext(p, _parentctx, _parentState)
 			p.PushNewRecursionContext(localctx, _startState, CQLParserRULE_booleanValueExpression)
 			p.SetState(74)
@@ -694,8 +691,6 @@ func (p *CQLParser) booleanTerm(_p int) (localctx IBooleanTermContext) {
 	var _parentctx antlr.ParserRuleContext = p.GetParserRuleContext()
 	_parentState := p.GetState()
 	localctx = NewBooleanTermContext(p, p.GetParserRuleContext(), _parentState)
-	var _prevctx IBooleanTermContext = localctx
-	var _ antlr.ParserRuleContext = _prevctx // TODO: To prevent unused variable warning.
 	_startState := 4
 	p.EnterRecursionRule(localctx, 4, CQLParserRULE_booleanTerm, _p)
 
@@ -733,7 +728,6 @@ func (p *CQLParser) booleanTerm(_p int) (localctx IBooleanTermContext) {
 			if p.GetParseListeners() != nil {
 				p.TriggerExitRuleEvent()
 			}
-			_prevctx = localctx
 			localctx = NewBooleanTermContext(p, _parentctx, _parentState)
 			p.PushNewRecursionContext(localctx, _startState, CQLParserRULE_booleanTerm)
 			p.SetState(85)
@@ -2115,8 +2109,6 @@ func (p *CQLParser) scalarExpression(_p int) (localctx IScalarExpressionContext)
 	var _parentctx antlr.ParserRuleContext = p.GetParserRuleContext()
 	_parentState := p.GetState()
 	localctx = NewScalarExpressionContext(p, p.GetParserRuleContext(), _parentState)
-	var _prevctx IScalarExpressionContext = localctx
-	var _ antlr.ParserRuleContext = _prevctx // TODO: To prevent unused variable warning.
 	_startState := 22
 	p.EnterRecursionRule(localctx, 22, CQLParserRULE_scalarExpression, _p)
 
@@ -2176,7 +2168,6 @@ func (p *CQLParser) scalarExpression(_p int) (localctx IScalarExpressionContext)
 			if p.GetParseListeners() != nil {
 				p.TriggerExitRuleEvent()
 			}
-			_prevctx = localctx
 			localctx = NewScalarExpressionContext(p, _parentctx, _parentState)
 			p.PushNewRecursionContext(localctx, _startState, CQLParserRULE_scalarExpression)
 			p.SetState(175)
