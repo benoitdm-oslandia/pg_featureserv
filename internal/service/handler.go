@@ -67,6 +67,8 @@ func InitRouter(basePath string) *mux.Router {
 
 	addRoute(router, "/collections/{id}/items/{fid}", handleItem)
 	addRoute(router, "/collections/{id}/items/{fid}.{fmt}", handleItem)
+	addRouteWithMethod(router, "/collections/{id}/items/{fid}", handleUpdateItem, "PATCH")
+	addRouteWithMethod(router, "/collections/{id}/items/{fid}.{fmt}", handleUpdateItem, "PATCH")
 
 	addRoute(router, "/functions", handleFunctions)
 	addRoute(router, "/functions.{fmt}", handleFunctions)
@@ -557,6 +559,10 @@ func handleItem(w http.ResponseWriter, r *http.Request) *appError {
 	} else {
 		return appErrorInternalFmt(errQuery, api.ErrMsgInvalidQuery)
 	}
+}
+
+func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
+	return appErrorBadRequest(nil, "Route not yet implemented!")
 }
 
 func writeItemHTML(w http.ResponseWriter, tbl *data.Table, name string, fid string, query string, urlBase string) *appError {

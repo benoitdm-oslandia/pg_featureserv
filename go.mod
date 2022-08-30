@@ -13,6 +13,6 @@ require (
 	github.com/paulmach/orb v0.7.1
 	github.com/pborman/getopt v0.0.0-20190409184431-ee0cd42419d3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/spf13/viper v1.6.1
+	github.com/spf13/viper v1.7.1
 	github.com/theckman/httpforwarded v0.4.0
 )
