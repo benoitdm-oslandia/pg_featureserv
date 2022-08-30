@@ -71,7 +71,6 @@ const (
 )
 
 const (
-<<<<<<< HEAD
 	ErrMsgEncoding                = "Error encoding response"
 	ErrMsgLoadCollections         = "Unable to access Collections"
 	ErrMsgCollectionNotFound      = "Collection not found: %v"
@@ -80,6 +79,7 @@ const (
 	ErrMsgCreateFeatureNotConform = "Unable to create new feature in Collection - data does not respect schema: %v"
 	ErrMsgCreateFeatureInCatalog  = "Unable to create new feature in Collection - catalog error: %v"
 	ErrMsgLoadFunctions           = "Unable to access Functions"
+	ErrMsgUpdateFeature           = "Unable to update feature in Collection: %v"
 	ErrMsgFunctionNotFound        = "Function not found: %v"
 	ErrMsgFunctionAccess          = "Unable to access Function: %v"
 	ErrMsgInvalidParameterValue   = "Invalid value for parameter %v: %v"
@@ -88,21 +88,6 @@ const (
 	ErrMsgDataWriteError          = "Unable to write data to: %v"
 	ErrMsgNoDataRead              = "No data read from: %v"
 	ErrMsgRequestTimeout          = "Maximum time exceeded.  Request cancelled."
-=======
-	ErrMsgEncoding              = "Error encoding response"
-	ErrMsgLoadCollections       = "Unable to access Collections"
-	ErrMsgCollectionNotFound    = "Collection not found: %v"
-	ErrMsgCollectionAccess      = "Unable to access Collection: %v"
-	ErrMsgFeatureNotFound       = "Feature not found: %v"
-	ErrMsgLoadFunctions         = "Unable to access Functions"
-	ErrMsgUpdateFeature         = "Unable to update feature in Collection: %v"
-	ErrMsgFunctionNotFound      = "Function not found: %v"
-	ErrMsgFunctionAccess        = "Unable to access Function: %v"
-	ErrMsgInvalidParameterValue = "Invalid value for parameter %v: %v"
-	ErrMsgDataReadError         = "Unable to read data from: %v"
-	ErrMsgNoDataRead            = "No data read from: %v"
-	ErrMsgRequestTimeout        = "Maximum time exceeded.  Request cancelled."
->>>>>>> Add update feature handler method
 )
 
 const (
@@ -300,7 +285,6 @@ var CollectionsInfoSchema openapi3.Schema = openapi3.Schema{
 	},
 }
 
-<<<<<<< HEAD
 func getFeatureExample() map[string]interface{} {
 	var result map[string]interface{}
 	var jsonStr = `{"type":"Feature","geometry":{"type":"Point","coordinates":[-70.88461956597838,47.807897059236495]},"properties":{}}`
@@ -329,39 +313,6 @@ var FeatureSchema openapi3.Schema = openapi3.Schema{
 					openapi3.NewSchemaRef("https://geojson.org/schema/MultiPoint.json", nil),
 					openapi3.NewSchemaRef("https://geojson.org/schema/MultiLineString.json", nil),
 					openapi3.NewSchemaRef("https://geojson.org/schema/MultiPolygon.json", nil),
-=======
-// TODO Feature et Geometry
-// https://geojson.org/schema/Feature.json
-// https://geojson.org/schema/GeoJSON.json
-
-var GeometrySchema openapi3.Schema = openapi3.Schema{
-	Type:     "object",
-	Required: []string{"coordinates"},
-	Properties: map[string]*openapi3.SchemaRef{
-		"coordinates": {
-			Value: &openapi3.Schema{
-				Type:     "array",
-				MinItems: 2,
-				Items: &openapi3.SchemaRef{
-					Value: &openapi3.Schema{
-						Type: "number",
-					},
-				},
-			},
-		},
-	},
-}
-
-var FeatureSchema openapi3.Schema = openapi3.Schema{
-	Type:     "object",
-	Required: []string{"geometry", "properties"},
-	Properties: map[string]*openapi3.SchemaRef{
-		"geometry": {
-			Value: &openapi3.Schema{
-				Type: "object",
-				Items: &openapi3.SchemaRef{
-					Value: &GeometrySchema,
->>>>>>> DRAFT : openapi / swagger
 				},
 			},
 		},
@@ -371,10 +322,7 @@ var FeatureSchema openapi3.Schema = openapi3.Schema{
 			},
 		},
 	},
-<<<<<<< HEAD
 	Example: getFeatureExample(),
-=======
->>>>>>> DRAFT : openapi / swagger
 }
 
 type Parameter struct {
