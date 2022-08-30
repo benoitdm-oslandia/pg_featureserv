@@ -1,0 +1,106 @@
+stages:
+
+  - 🐍 lint
+  - 🤞 test
+  - 📦 build
+  - 🚀 deploy
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+#  PIP_CACHE_DIR: "$CI_PROJECT_FOLDER/.cache/pip"
+  PROJECT_FOLDER: "pg_featureserv"
+  REPO_PLUGIN_URL: "https://git.oslandia.net/Client-projects/2007_17_pg_featureserv_mobiliseyourcity"
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
+  POSTGRES_VERSION: "13"
+  POSTGIS_VERSION: "3.2"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.npm"
+
+# Pip's cache doesn't store the go packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+# cache:
+#   key:
+#     files:
+#       - requirements/*.txt
+#   paths:
+#     - .cache/pip
+
+# ======================================================================================
+# -- CONTAINERS JOBS -------------------------------------------------------------------
+# ======================================================================================
+
+
+
+# ======================================================================================
+# -- LINT JOBS -------------------------------------------------------------------------
+# ======================================================================================
+
+go-linter:
+  tags:
+    - docker
+  stage: 🐍 lint
+  image: "golang:1.18"
+  only:
+    # refs:
+    #   - merge_requests
+    #   - main
+    #   - develop
+    changes:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".gitlab-ci.yml"
+  before_script:
+    - apt-get update && apt-get install -y pre-commit curl
+    - pre-commit install --install-hooks
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.49.0
+  script:
+    - pre-commit run -a -v
+
+
+
+# ======================================================================================
+# -- TEST JOBS -------------------------------------------------------------------------
+# ======================================================================================
+
+# -- GO TEST
+go-test-unit:
+  tags:
+    - docker
+  stage: 🤞 test
+  variables:
+      POSTGRES_DB: pg_featureserv
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TRANSAPI_DATABASE_NAME: ${POSTGRES_DB}
+      TRANSAPI_DATABASE_HOST: postgis
+      TRANSAPI_DATABASE_USERNAME: ${POSTGRES_USER}
+      TRANSAPI_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+  parallel:
+    matrix:
+      - GO_VERSION: "1.13"
+      - GO_VERSION: "1.16"
+      - GO_VERSION: "1.18"
+      - GO_VERSION: "1.19"
+  image: "golang:${GO_VERSION}"
+  services:
+    - name: postgis/postgis:${POSTGRES_VERSION}-${POSTGIS_VERSION}-alpine
+      # alias must be the same than ${TRANSAPI_DATABASE_HOST}
+      alias: postgis
+  only:
+    refs:
+      - merge_requests
+      - main
+      - develop
+    changes:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".gitlab-ci.yml"
+
+  script:
+    - go test -v ./internal/cql ./internal/service
