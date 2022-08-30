@@ -71,6 +71,7 @@ const (
 )
 
 const (
+<<<<<<< HEAD
 	ErrMsgEncoding                = "Error encoding response"
 	ErrMsgLoadCollections         = "Unable to access Collections"
 	ErrMsgCollectionNotFound      = "Collection not found: %v"
@@ -87,6 +88,21 @@ const (
 	ErrMsgDataWriteError          = "Unable to write data to: %v"
 	ErrMsgNoDataRead              = "No data read from: %v"
 	ErrMsgRequestTimeout          = "Maximum time exceeded.  Request cancelled."
+=======
+	ErrMsgEncoding              = "Error encoding response"
+	ErrMsgLoadCollections       = "Unable to access Collections"
+	ErrMsgCollectionNotFound    = "Collection not found: %v"
+	ErrMsgCollectionAccess      = "Unable to access Collection: %v"
+	ErrMsgFeatureNotFound       = "Feature not found: %v"
+	ErrMsgLoadFunctions         = "Unable to access Functions"
+	ErrMsgUpdateFeature         = "Unable to update feature in Collection: %v"
+	ErrMsgFunctionNotFound      = "Function not found: %v"
+	ErrMsgFunctionAccess        = "Unable to access Function: %v"
+	ErrMsgInvalidParameterValue = "Invalid value for parameter %v: %v"
+	ErrMsgDataReadError         = "Unable to read data from: %v"
+	ErrMsgNoDataRead            = "No data read from: %v"
+	ErrMsgRequestTimeout        = "Maximum time exceeded.  Request cancelled."
+>>>>>>> Add update feature handler method
 )
 
 const (
