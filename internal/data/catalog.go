@@ -51,6 +51,11 @@ type Catalog interface {
 	// using the JSON data to create the feature
 	AddTableFeature(ctx context.Context, tableName string, jsonData []byte) (int64, error)
 
+	// UpdateTableFeature returns the JSON text for a table feature with given id
+	// Feature with given id must be updated with given attribute values
+	// It returns an empty string if the table or feature does not exist
+	UpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error)
+
 	Functions() ([]*Function, error)
 
 	// FunctionByName returns the function with given name.

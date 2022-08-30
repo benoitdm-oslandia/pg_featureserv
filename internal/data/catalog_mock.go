@@ -277,6 +277,10 @@ func (cat *CatalogMock) AddTableFeature(ctx context.Context, tableName string, j
 	return maxId + 1, nil
 }
 
+func (cat *CatalogMock) UpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
+	panic("CatalogMock::UpdateTableFeature unimplemented")
+}
+
 func (cat *CatalogMock) Functions() ([]*Function, error) {
 	return cat.FunctionDefs, nil
 }
