@@ -33,8 +33,13 @@ func TestApiContainsCollectionSchemas(t *testing.T) {
 	json.Unmarshal(body, &v)
 
 	equals(t, 11, len(v.Paths), "# api paths")
-	equals(t, "Provides access to data representation (schema) for any features in specified collection", v.Paths.Find("/collections/{collectionId}/schema").Description, "schema path present")
-	equals(t, "getCollectionSchema", v.Paths.Find("/collections/{collectionId}/schema").Get.OperationID, "schema path get present")
+	path := v.Paths.Find("/collections/{collectionId}/schema")
+	assert(t, path != nil, "schema path exists")
+	equals(t, "Provides access to data representation (schema) for any features in specified collection", path.Description, "schema path present")
+	equals(t, "getCollectionSchema", path.Get.OperationID, "schema path get present")
+	equals(t, 2, len(path.Get.Parameters), "schema path get present")
+	assert(t, path.Get.Parameters.GetByInAndName("path", "collectionId") != nil, "collectionId path parameter exists")
+	assert(t, path.Get.Parameters.GetByInAndName("query", "type") != nil, "type query parameter exists")
 }
 
 // checks collection schema contains valid data description

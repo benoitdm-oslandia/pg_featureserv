@@ -372,6 +372,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 				Get: &openapi3.Operation{
 					OperationID: "getCollectionSchema",
 					Parameters: openapi3.Parameters{
+						&paramCollectionID,
 						&paramType,
 					},
 					Responses: openapi3.Responses{
