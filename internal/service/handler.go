@@ -614,6 +614,10 @@ func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	return nil
 }
 
+func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
+	return appErrorBadRequest(nil, "Route not yet implemented!")
+}
+
 func writeItemHTML(w http.ResponseWriter, tbl *data.Table, name string, fid string, query string, urlBase string) *appError {
 	//--- query data for request
 
