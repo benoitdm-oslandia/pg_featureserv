@@ -512,14 +512,22 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 						},
 					},
 					Responses: openapi3.Responses{
-						"204": &openapi3.ResponseRef{
+						"200": &openapi3.ResponseRef{
 							Value: &openapi3.Response{
-								Description: "OK",
+								Description: "GeoJSON Feature document containing feature data",
+								/*
+									// TODO: create schema for result?
+									Content: openapi3.NewContentWithJSONSchemaRef(
+										&openapi3.SchemaRef{
+											Ref: "http://geojson.org/schema/Feature.json",
+										},
+									),
+								*/
 							},
 						},
-						"202": &openapi3.ResponseRef{
+						"204": &openapi3.ResponseRef{
 							Value: &openapi3.Response{
-								Description: "Added to processing queue",
+								Description: "No Content: replacement feature is same as existing feature",
 							},
 						},
 						"404": &openapi3.ResponseRef{

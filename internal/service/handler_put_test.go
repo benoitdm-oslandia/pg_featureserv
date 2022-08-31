@@ -55,7 +55,7 @@ func TestReplaceFeature(t *testing.T) {
 	fmt.Println(jsonStr)
 	rr := doPutRequest(t, "/collections/mock_a/items", []byte(jsonStr), header)
 
-	// check response code 204
+	// check response code 200
 
 	// check if point can be read
 
