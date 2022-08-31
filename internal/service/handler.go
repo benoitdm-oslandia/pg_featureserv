@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
@@ -408,12 +409,20 @@ func writeCreateItemSchemaJSON(ctx context.Context, w http.ResponseWriter, table
 	props.Type = "object"
 
 	// update required properties
+	requiredTypeKeys := make([]string, 0, len(table.DbTypes))
+
+	for k := range table.DbTypes {
+		requiredTypeKeys = append(requiredTypeKeys, k)
+	}
+	sort.Strings(requiredTypeKeys)
+
 	var requiredTypes []string
-	for k, c := range table.DbTypes {
-		if c.IsRequired {
+	for _, k := range requiredTypeKeys {
+		if table.DbTypes[k].IsRequired {
 			requiredTypes = append(requiredTypes, k)
 		}
 	}
+
 	props.Required = requiredTypes
 
 	// update properties by their name and type
