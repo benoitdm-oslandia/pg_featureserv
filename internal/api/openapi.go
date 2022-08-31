@@ -483,6 +483,52 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 						},
 					},
 				},
+				Put: &openapi3.Operation{
+					OperationID: "replaceCollectionFeature",
+					Parameters: openapi3.Parameters{
+						&paramCollectionID,
+						&openapi3.ParameterRef{
+							Value: &openapi3.Parameter{
+								Name:            "featureId",
+								Description:     "Id of feature in collection to retrieve data for.",
+								In:              "path",
+								Required:        true,
+								Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+								AllowEmptyValue: false,
+							},
+						},
+						&paramProperties,
+						&paramTransform,
+						&paramCrs,
+					},
+					// TODO : schema feature à mettre en place !
+					// https://geojson.org/schema/Feature.json
+					// https://geojson.org/schema/GeoJSON.json
+					RequestBody: &openapi3.RequestBodyRef{
+						Value: &openapi3.RequestBody{
+							Description: "...",
+							Required:    true,
+							Content:     openapi3.NewContentWithJSONSchema(&FeatureSchema),
+						},
+					},
+					Responses: openapi3.Responses{
+						"204": &openapi3.ResponseRef{
+							Value: &openapi3.Response{
+								Description: "OK",
+							},
+						},
+						"202": &openapi3.ResponseRef{
+							Value: &openapi3.Response{
+								Description: "Added to processing queue",
+							},
+						},
+						"404": &openapi3.ResponseRef{
+							Value: &openapi3.Response{
+								Description: "Target resource not found",
+							},
+						},
+					},
+				},
 			},
 			apiBase + "functions": &openapi3.PathItem{
 				Summary:     "Functions metadata",
