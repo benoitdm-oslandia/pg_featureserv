@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -39,29 +41,34 @@ func TestApiContainsMethodPut(t *testing.T) {
 }
 
 func TestReplaceFeature(t *testing.T) {
-	//--- retrieve max feature id
-	params := data.QueryParam{
-		Limit:  100,
-		Offset: 0,
-	}
-	// create mock
-	features, _ := catalogMock.TableFeatures(context.Background(), "mock_a", &params)
-	maxId := len(features)
 
 	var header = make(http.Header)
 	header.Add("Content-Type", "application/geo+json")
-	// create and put replacement point
-	jsonStr := catalogMock.MakeFeatureMockPointAsJSON(maxId, 12, 34)
-	fmt.Println(jsonStr)
-	featureUrl := fmt.Sprintf("/collections/mock_a/items/%d", maxId)
-	rr := doPutRequest(t, featureUrl, []byte(jsonStr), header)
 
-	// check response code 200
-	assert(t, rr.StatusCode == 200, "Response code should be 200")
+	params := data.QueryParam{Limit: 100, Offset: 0}
+	features, _ := catalogMock.TableFeatures(context.Background(), "mock_a", &params)
+	maxId := len(features)
 
-	// check if point can be read
-	checkItem(t, maxId)
+	featureUrl := fmt.Sprintln("/collections/mock_a/items/%d", maxId)
 
-	// check that point has been replaced
-	checkItemEquals(t, maxId, jsonStr)
+	{
+		jsonStr := `{
+			"id": 100,
+			"name": "Sample",
+			"email": "sample@test.com"
+		}`
+		rr := doRequestMethodStatus(t, "PUT", featureUrl, []byte(jsonStr), header, http.StatusInternalServerError)
+		equals(t, http.StatusInternalServerError, rr.Code, "Should have failed")
+		assert(t, strings.Index(rr.Body.String(), fmt.Sprintf(api.ErrMsgCreateFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
+	}
+
+	{
+		// create and put replacement point
+		jsonStr := catalogMock.MakeFeatureMockPointAsJSON(100, 12, 34)
+		fmt.Println(jsonStr)
+		doRequestMethodStatus(t, featureUrl, []byte(jsonStr), header, http.StatusOK)
+
+		// check if item available and that point has been replaced
+		checkItemEquals(t, maxId, jsonStr)
+	}
 }
