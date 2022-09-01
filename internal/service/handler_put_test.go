@@ -53,12 +53,15 @@ func TestReplaceFeature(t *testing.T) {
 	// create and put replacement point
 	jsonStr := catalogMock.MakeFeatureMockPointAsJSON(maxId, 12, 34)
 	fmt.Println(jsonStr)
-	rr := doPutRequest(t, "/collections/mock_a/items", []byte(jsonStr), header)
+	featureUrl := fmt.Sprintf("/collections/mock_a/items/%d", maxId)
+	rr := doPutRequest(t, featureUrl, []byte(jsonStr), header)
 
 	// check response code 200
+	assert(t, rr.StatusCode == 200, "Response code should be 200")
 
 	// check if point can be read
+	checkItem(t, maxId)
 
 	// check that point has been replaced
-
+	checkItemEquals(t, maxId, jsonStr)
 }
