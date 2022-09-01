@@ -284,37 +284,34 @@ var CollectionsInfoSchema openapi3.Schema = openapi3.Schema{
 	},
 }
 
-// TODO Feature et Geometry
-// https://geojson.org/schema/Feature.json
-// https://geojson.org/schema/GeoJSON.json
-
-var GeometrySchema openapi3.Schema = openapi3.Schema{
-	Type:     "object",
-	Required: []string{"coordinates"},
-	Properties: map[string]*openapi3.SchemaRef{
-		"coordinates": {
-			Value: &openapi3.Schema{
-				Type:     "array",
-				MinItems: 2,
-				Items: &openapi3.SchemaRef{
-					Value: &openapi3.Schema{
-						Type: "number",
-					},
-				},
-			},
-		},
-	},
+func getFeatureExample() map[string]interface{} {
+	var result map[string]interface{}
+	var jsonStr = `{"type":"Feature","geometry":{"type":"Point","coordinates":[-70.88461956597838,47.807897059236495]},"properties":{}}`
+	json.Unmarshal([]byte(jsonStr), &result)
+	return result
 }
 
 var FeatureSchema openapi3.Schema = openapi3.Schema{
 	Type:     "object",
 	Required: []string{"geometry", "properties"},
 	Properties: map[string]*openapi3.SchemaRef{
-		"geometry": {
+		"id": {Value: &openapi3.Schema{Type: "number", Format: "long"}},
+		"type": {
 			Value: &openapi3.Schema{
-				Type: "object",
-				Items: &openapi3.SchemaRef{
-					Value: &GeometrySchema,
+				Type:    "string",
+				Default: "Feature",
+			},
+		},
+		"geometry": {
+			// Value: &GeometrySchema
+			Value: &openapi3.Schema{
+				OneOf: []*openapi3.SchemaRef{
+					openapi3.NewSchemaRef("https://geojson.org/schema/Point.json", nil),
+					openapi3.NewSchemaRef("https://geojson.org/schema/LineString.json", nil),
+					openapi3.NewSchemaRef("https://geojson.org/schema/Polygon.json", nil),
+					openapi3.NewSchemaRef("https://geojson.org/schema/MultiPoint.json", nil),
+					openapi3.NewSchemaRef("https://geojson.org/schema/MultiLineString.json", nil),
+					openapi3.NewSchemaRef("https://geojson.org/schema/MultiPolygon.json", nil),
 				},
 			},
 		},
@@ -324,6 +321,7 @@ var FeatureSchema openapi3.Schema = openapi3.Schema{
 			},
 		},
 	},
+	Example: getFeatureExample(),
 }
 
 type Parameter struct {

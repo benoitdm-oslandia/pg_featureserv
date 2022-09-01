@@ -589,6 +589,17 @@ func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 		return appErrorInternalFmt(errBody, "Unable to read request body for Collection: %v", name)
 	}
 
+	// check schema
+	// FIXME exception unresolved ref https://geojson.org/schema/point.json !?
+	// var val map[string]interface{}
+	// json.Unmarshal(body, &val)
+	// err := api.FeatureSchema.VisitJSONObject(val)
+	// if err != nil {
+	// 	return appErrorInternalFmt(err, "Data not respect schema: %v", name)
+	// }
+
+	// TODO check properties !
+
 	// perform update in database
 	feature, err2 := catalogInstance.UpdateTableFeature(r.Context(), name, fid, body)
 	if err2 != nil {
