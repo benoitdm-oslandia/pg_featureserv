@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220209173558-ad29539cd2e9
+	github.com/boumenot/gocover-cobertura v1.2.0 // indirect
 	github.com/getkin/kin-openapi v0.2.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3

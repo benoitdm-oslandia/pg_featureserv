@@ -39,6 +39,20 @@ variables:
 # -- LINT JOBS -------------------------------------------------------------------------
 # ======================================================================================
 
+include:
+  - template: Code-Quality.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+sast:
+  tags:
+    - docker
+  stage: 🐍 lint
+
+code_quality:
+  tags:
+    - linux_vm
+  stage: 🐍 lint
+
 go-linter:
   tags:
     - docker
@@ -76,10 +90,7 @@ go-test-unit:
       POSTGRES_DB: pg_featureserv
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      TRANSAPI_DATABASE_NAME: ${POSTGRES_DB}
-      TRANSAPI_DATABASE_HOST: postgis
-      TRANSAPI_DATABASE_USERNAME: ${POSTGRES_USER}
-      TRANSAPI_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgis/${POSTGRES_DB}"
   parallel:
     matrix:
       - GO_VERSION: "1.13"
@@ -89,7 +100,6 @@ go-test-unit:
   image: "golang:${GO_VERSION}"
   services:
     - name: postgis/postgis:${POSTGRES_VERSION}-${POSTGIS_VERSION}-alpine
-      # alias must be the same than ${TRANSAPI_DATABASE_HOST}
       alias: postgis
   only:
     refs:
@@ -103,4 +113,16 @@ go-test-unit:
       - ".gitlab-ci.yml"
 
   script:
-    - go test -v ./internal/cql ./internal/service
+    - |
+       go test $(go list ./... | grep -v /vendor/) -v \
+       -coverprofile=coverage.txt \
+       -covermode count \
+       -coverpkg $(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
+    - go install github.com/boumenot/gocover-cobertura
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage-unit_${GO_VERSION}.xml
+
+  # read coverage info from test output:
+  coverage: /^coverage:\s(\d+(?:\.\d+)?%)/
+  artifacts:
+    reports:
+      cobertura: coverage-unit_${GO_VERSION}.xml
