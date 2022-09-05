@@ -302,7 +302,6 @@ func handleCollectionSchemas(w http.ResponseWriter, r *http.Request) *appError {
 			return appErrorBadRequest(nil, fmt.Sprintf("Format %s not implemented!", format))
 		}
 	}
-
 }
 
 func handleCreateCollectionItem(w http.ResponseWriter, r *http.Request) *appError {
@@ -397,7 +396,6 @@ func writeCreateItemSchemaJSON(ctx context.Context, w http.ResponseWriter, table
 		return appErrorMsg(err, err.Error(), http.StatusInternalServerError)
 	}
 	return writeJSON(w, api.ContentTypeSchemaJSON, createSchema)
-
 }
 
 func getCreateItemSchema(ctx context.Context, table *data.Table) (openapi3.Schema, error) {
@@ -590,15 +588,27 @@ func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	}
 
 	// check schema
-	// FIXME exception unresolved ref https://geojson.org/schema/point.json !?
-	// var val map[string]interface{}
-	// json.Unmarshal(body, &val)
-	// err := api.FeatureSchema.VisitJSONObject(val)
-	// if err != nil {
-	// 	return appErrorInternalFmt(err, "Data not respect schema: %v", name)
-	// }
+	var val map[string]interface{}
+	json.Unmarshal(body, &val)
+	err := api.FeatureSchema.VisitJSONObject(val) // FIXME exception with oneOf (ie. api.go) !?
+	if err != nil {
+		return appErrorInternalFmt(err, "Data not respect schema: %v", name)
+	}
 
-	// TODO check properties !
+	// check properties with db field table!
+	props := val["properties"].(map[string]interface{})
+	for k := range props {
+		if !func(s []string, e string) bool {
+			for _, a := range s {
+				if a == e {
+					return true
+				}
+			}
+			return false
+		}(tbl.Columns, k) {
+			return appErrorInternalFmt(err, "Properties not conform with field table: %v", k)
+		}
+	}
 
 	// perform update in database
 	feature, err2 := catalogInstance.UpdateTableFeature(r.Context(), name, fid, body)

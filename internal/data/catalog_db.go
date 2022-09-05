@@ -658,7 +658,7 @@ func makeFeatureJSON(id string, geom string, props map[string]interface{}) strin
 type geojsonFeatureData struct {
 	Type  string                 `json:"type"`
 	ID    string                 `json:"id,omitempty"`
-	Geom  *geojson.Geometry      `json:"geometry"`
+	Geom  *geojson.Geometry      `json:"geometry,omitempty"`
 	Props map[string]interface{} `json:"properties"`
 }
 

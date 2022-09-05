@@ -292,11 +292,23 @@ func getFeatureExample() map[string]interface{} {
 	return result
 }
 
+// FIXME how to use tag 'oneOf' ?
 var FeatureSchema openapi3.Schema = openapi3.Schema{
 	Type:     "object",
 	Required: []string{"geometry", "properties"},
 	Properties: map[string]*openapi3.SchemaRef{
-		"id": {Value: &openapi3.Schema{Type: "number", Format: "long"}},
+		"id": {
+			Value: &openapi3.Schema{
+				OneOf: []*openapi3.SchemaRef{
+					openapi3.NewSchemaRef("", &openapi3.Schema{
+						Type: "number", Format: "long",
+					}),
+					openapi3.NewSchemaRef("", &openapi3.Schema{
+						Type: "string",
+					}),
+				},
+			},
+		},
 		"type": {
 			Value: &openapi3.Schema{
 				Type:    "string",
@@ -304,21 +316,33 @@ var FeatureSchema openapi3.Schema = openapi3.Schema{
 			},
 		},
 		"geometry": {
-			// Value: &GeometrySchema
 			Value: &openapi3.Schema{
-				OneOf: []*openapi3.SchemaRef{
-					openapi3.NewSchemaRef("https://geojson.org/schema/Point.json", nil),
-					openapi3.NewSchemaRef("https://geojson.org/schema/LineString.json", nil),
-					openapi3.NewSchemaRef("https://geojson.org/schema/Polygon.json", nil),
-					openapi3.NewSchemaRef("https://geojson.org/schema/MultiPoint.json", nil),
-					openapi3.NewSchemaRef("https://geojson.org/schema/MultiLineString.json", nil),
-					openapi3.NewSchemaRef("https://geojson.org/schema/MultiPolygon.json", nil),
+				Items: &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type: "string", // mandatory to validate the schema
+						OneOf: []*openapi3.SchemaRef{
+							openapi3.NewSchemaRef("https://geojson.org/schema/Point.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/LineString.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/Polygon.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/MultiPoint.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/MultiLineString.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/MultiPolygon.json", &openapi3.Schema{Type: "string"}),
+						},
+					},
 				},
 			},
 		},
 		"properties": {
 			Value: &openapi3.Schema{
 				Type: "object",
+			},
+		},
+		"bbox": {
+			Value: &openapi3.Schema{
+				Type:     "array",
+				MinItems: 4,
+				MaxItems: openapi3.Uint64Ptr(4),
+				Items:    openapi3.NewSchemaRef("", openapi3.NewFloat64Schema().WithMin(-180).WithMax(180)),
 			},
 		},
 	},

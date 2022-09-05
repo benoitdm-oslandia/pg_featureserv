@@ -278,7 +278,47 @@ func (cat *CatalogMock) AddTableFeature(ctx context.Context, tableName string, j
 }
 
 func (cat *CatalogMock) UpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
-	panic("CatalogMock::UpdateTableFeature unimplemented")
+
+	var schemaObject geojsonFeatureData
+	err1 := json.Unmarshal(jsonData, &schemaObject)
+	if err1 != nil {
+		return "", err1
+	}
+
+	index, err2 := strconv.Atoi(id)
+	if err2 != nil {
+		return "", nil
+	}
+
+	oldFeature := cat.tableData[tableName][index]
+
+	// update values if exist into json !
+	if schemaObject.Geom != nil {
+		oldFeature.Geom = schemaObject.Geom
+	}
+
+	if schemaObject.Props["prop_a"] != nil {
+		oldFeature.PropA = schemaObject.Props["prop_a"].(string)
+	}
+
+	if schemaObject.Props["prop_b"] != nil {
+		oldFeature.PropB = int(schemaObject.Props["prop_b"].(float64))
+	}
+
+	if schemaObject.Props["prop_c"] != nil {
+		oldFeature.PropC = schemaObject.Props["prop_c"].(string)
+	}
+
+	if schemaObject.Props["prop_d"] != nil {
+		oldFeature.PropD = int(schemaObject.Props["prop_d"].(float64))
+	}
+
+	jsonStr, err3 := json.Marshal(oldFeature)
+	if err3 != nil {
+		return "", err3
+	}
+
+	return string(jsonStr), nil
 }
 
 func (cat *CatalogMock) Functions() ([]*Function, error) {
