@@ -292,10 +292,9 @@ func getFeatureExample() map[string]interface{} {
 	return result
 }
 
-// FIXME how to use tag 'oneOf' ?
 var FeatureSchema openapi3.Schema = openapi3.Schema{
 	Type:     "object",
-	Required: []string{"geometry", "properties"},
+	Required: []string{},
 	Properties: map[string]*openapi3.SchemaRef{
 		"id": {
 			Value: &openapi3.Schema{

@@ -596,17 +596,20 @@ func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	}
 
 	// check properties with db field table!
-	props := val["properties"].(map[string]interface{})
-	for k := range props {
-		if !func(s []string, e string) bool {
-			for _, a := range s {
-				if a == e {
-					return true
+	i := val["properties"]
+	if i != nil {
+		props := val["properties"].(map[string]interface{})
+		for k := range props {
+			if !func(s []string, e string) bool {
+				for _, a := range s {
+					if a == e {
+						return true
+					}
 				}
+				return false
+			}(tbl.Columns, k) {
+				return appErrorInternalFmt(err, "Properties not conform with field table: %v", k)
 			}
-			return false
-		}(tbl.Columns, k) {
-			return appErrorInternalFmt(err, "Properties not conform with field table: %v", k)
 		}
 	}
 

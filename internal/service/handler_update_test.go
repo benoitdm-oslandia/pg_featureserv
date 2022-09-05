@@ -129,7 +129,6 @@ func TestSuccessdOnlyPropUpdateFeature(t *testing.T) {
 	jsonStr := `{
 		"type": "Feature",
 		"id": "3",
-		"geometry": {},
 		"properties": {
 			"prop_a": "propA..."
 		}
@@ -146,6 +145,39 @@ func TestSuccessdOnlyPropUpdateFeature(t *testing.T) {
 
 	equals(t, "3", jsonData["ID"].(string), "feature ID")
 	equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
+	equals(t, 3, int(jsonData["prop_b"].(float64)), "feature value b")
+	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
+	equals(t, 3, int(jsonData["prop_d"].(float64)), "feature value d")
+}
+
+func TestSuccessdOnlyGeomUpdateFeature(t *testing.T) {
+	path := "/collections/mock_a/items/2"
+	var header = make(http.Header)
+	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
+
+	jsonStr := `{
+		"type": "Feature",
+		"id": "3",
+		"geometry": {
+			"type": "Point",
+			"coordinates": [
+			-120,
+			40
+			]
+		}
+	}`
+
+	resp := doRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(string(body))
+
+	var jsonData map[string]interface{}
+	err := json.Unmarshal(body, &jsonData)
+	assert(t, err == nil, fmt.Sprintf("%v", err))
+
+	equals(t, "3", jsonData["ID"].(string), "feature ID")
+	equals(t, "propA", jsonData["prop_a"].(string), "feature value a")
 	equals(t, 3, int(jsonData["prop_b"].(float64)), "feature value b")
 	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
 	equals(t, 3, int(jsonData["prop_d"].(float64)), "feature value d")
