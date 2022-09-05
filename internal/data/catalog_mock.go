@@ -290,7 +290,7 @@ func (cat *CatalogMock) UpdateTableFeature(ctx context.Context, tableName string
 		return "", nil
 	}
 
-	oldFeature := cat.tableData[tableName][index]
+	oldFeature := cat.tableData[tableName][index-1]
 
 	// update values if exist into json !
 	if schemaObject.Geom != nil {

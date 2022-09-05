@@ -288,7 +288,10 @@ var CollectionsInfoSchema openapi3.Schema = openapi3.Schema{
 func getFeatureExample() map[string]interface{} {
 	var result map[string]interface{}
 	var jsonStr = `{"type":"Feature","geometry":{"type":"Point","coordinates":[-70.88461956597838,47.807897059236495]},"properties":{}}`
-	json.Unmarshal([]byte(jsonStr), &result)
+	err := json.Unmarshal([]byte(jsonStr), &result)
+	if err != nil {
+		return nil
+	}
 	return result
 }
 

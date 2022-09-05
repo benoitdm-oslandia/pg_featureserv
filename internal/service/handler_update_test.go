@@ -30,7 +30,8 @@ func TestApiContainsMethodPatchFeature(t *testing.T) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var v openapi3.Swagger
-	json.Unmarshal(body, &v)
+	err := json.Unmarshal(body, &v)
+	assert(t, err == nil, fmt.Sprintf("%v", err))
 
 	equals(t, 11, len(v.Paths), "# api paths")
 	equals(t, "Provides access to a single feature identitfied by {featureId} from the specified collection", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Description, "path present")
@@ -44,7 +45,7 @@ func TestSuccessAllUpdateFeature(t *testing.T) {
 
 	jsonStr := `{
 		"type": "Feature",
-		"id": "2",
+		"id": "1",
 		"geometry": {
 			"type": "Point",
 			"coordinates": [
@@ -69,7 +70,7 @@ func TestSuccessAllUpdateFeature(t *testing.T) {
 	err := json.Unmarshal(body, &jsonData)
 	assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "2", jsonData["ID"].(string), "feature ID")
+	equals(t, "1", jsonData["ID"].(string), "feature ID")
 	equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
 	equals(t, 1, int(jsonData["prop_b"].(float64)), "feature value b")
 	equals(t, "propC...", jsonData["prop_c"].(string), "feature value c")
@@ -87,7 +88,7 @@ func TestSuccessPartialUpdateFeature(t *testing.T) {
 
 	jsonStr := `{
 		"type": "Feature",
-		"id": "3",
+		"id": "2",
 		"geometry": {
 			"type": "Point",
 			"coordinates": [
@@ -110,11 +111,11 @@ func TestSuccessPartialUpdateFeature(t *testing.T) {
 	err := json.Unmarshal(body, &jsonData)
 	assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "3", jsonData["ID"].(string), "feature ID")
+	equals(t, "2", jsonData["ID"].(string), "feature ID")
 	equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
 	equals(t, 2, int(jsonData["prop_b"].(float64)), "feature value b")
 	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
-	equals(t, 3, int(jsonData["prop_d"].(float64)), "feature value d")
+	equals(t, 2, int(jsonData["prop_d"].(float64)), "feature value d")
 	geom := jsonData["geometry"].(map[string]interface{})
 	equals(t, "Point", geom["type"].(string), "feature Type")
 	// TODO : coordinates !
@@ -122,7 +123,7 @@ func TestSuccessPartialUpdateFeature(t *testing.T) {
 }
 
 func TestSuccessdOnlyPropUpdateFeature(t *testing.T) {
-	path := "/collections/mock_a/items/2"
+	path := "/collections/mock_a/items/3"
 	var header = make(http.Header)
 	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
 
@@ -151,13 +152,13 @@ func TestSuccessdOnlyPropUpdateFeature(t *testing.T) {
 }
 
 func TestSuccessdOnlyGeomUpdateFeature(t *testing.T) {
-	path := "/collections/mock_a/items/2"
+	path := "/collections/mock_a/items/4"
 	var header = make(http.Header)
 	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
 
 	jsonStr := `{
 		"type": "Feature",
-		"id": "3",
+		"id": "4",
 		"geometry": {
 			"type": "Point",
 			"coordinates": [
@@ -176,11 +177,11 @@ func TestSuccessdOnlyGeomUpdateFeature(t *testing.T) {
 	err := json.Unmarshal(body, &jsonData)
 	assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "3", jsonData["ID"].(string), "feature ID")
+	equals(t, "4", jsonData["ID"].(string), "feature ID")
 	equals(t, "propA", jsonData["prop_a"].(string), "feature value a")
-	equals(t, 3, int(jsonData["prop_b"].(float64)), "feature value b")
+	equals(t, 4, int(jsonData["prop_b"].(float64)), "feature value b")
 	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
-	equals(t, 3, int(jsonData["prop_d"].(float64)), "feature value d")
+	equals(t, 4, int(jsonData["prop_d"].(float64)), "feature value d")
 	geom := jsonData["geometry"].(map[string]interface{})
 	equals(t, "Point", geom["type"].(string), "feature Type")
 	// TODO : coordinates !

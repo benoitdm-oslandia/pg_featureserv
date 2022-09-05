@@ -589,7 +589,11 @@ func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 
 	// check schema
 	var val map[string]interface{}
-	json.Unmarshal(body, &val)
+	errUnMarsh := json.Unmarshal(body, &val)
+	if errUnMarsh != nil {
+		return appErrorInternalFmt(errUnMarsh, "Json not conform")
+	}
+
 	err := api.FeatureSchema.VisitJSONObject(val) // FIXME exception with oneOf (ie. api.go) !?
 	if err != nil {
 		return appErrorInternalFmt(err, "Data not respect schema: %v", name)
