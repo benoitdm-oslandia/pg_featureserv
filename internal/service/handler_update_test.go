@@ -21,21 +21,22 @@ import (
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+	"github.com/CrunchyData/pg_featureserv/util"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
 // checks swagger api contains method PATCH for updating a feaure from a specified collection
 func TestApiContainsMethodPatchFeature(t *testing.T) {
-	resp := doRequest(t, "/api")
+	resp := hTest.DoRequest(t, "/api")
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var v openapi3.Swagger
 	err := json.Unmarshal(body, &v)
-	assert(t, err == nil, fmt.Sprintf("%v", err))
+	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, 11, len(v.Paths), "# api paths")
-	equals(t, "Provides access to a single feature identitfied by {featureId} from the specified collection", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Description, "path present")
-	equals(t, "updateCollectionFeature", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Patch.OperationID, "method PATCH present")
+	util.Equals(t, 11, len(v.Paths), "# api paths")
+	util.Equals(t, "Provides access to a single feature identitfied by {featureId} from the specified collection", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Description, "path present")
+	util.Equals(t, "updateCollectionFeature", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Patch.OperationID, "method PATCH present")
 }
 
 func TestSuccessAllUpdateFeature(t *testing.T) {
@@ -61,23 +62,25 @@ func TestSuccessAllUpdateFeature(t *testing.T) {
 		}
 	}`
 
-	resp := doRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
+	resp := hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
 
 	var jsonData map[string]interface{}
 	err := json.Unmarshal(body, &jsonData)
-	assert(t, err == nil, fmt.Sprintf("%v", err))
+	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "1", jsonData["ID"].(string), "feature ID")
-	equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
-	equals(t, 1, int(jsonData["prop_b"].(float64)), "feature value b")
-	equals(t, "propC...", jsonData["prop_c"].(string), "feature value c")
-	equals(t, 1, int(jsonData["prop_d"].(float64)), "feature value d")
+	util.Equals(t, "1", jsonData["ID"].(string), "feature ID")
+	util.Equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
+	util.Equals(t, 1, int(jsonData["prop_b"].(float64)), "feature value b")
+	util.Equals(t, "propC...", jsonData["prop_c"].(string), "feature value c")
+	util.Equals(t, 1, int(jsonData["prop_d"].(float64)), "feature value d")
 	geom := jsonData["geometry"].(map[string]interface{})
-	equals(t, "Point", geom["type"].(string), "feature Type")
-	// TODO : coordinates !
+	util.Equals(t, "Point", geom["type"].(string), "feature Type")
+	coordinate := geom["coordinates"].([]interface{})
+	util.Equals(t, -120, int(coordinate[0].(float64)), "feature latitude")
+	util.Equals(t, 40, int(coordinate[1].(float64)), "feature longitude")
 
 }
 
@@ -102,23 +105,25 @@ func TestSuccessPartialUpdateFeature(t *testing.T) {
 		}
 	}`
 
-	resp := doRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
+	resp := hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
 
 	var jsonData map[string]interface{}
 	err := json.Unmarshal(body, &jsonData)
-	assert(t, err == nil, fmt.Sprintf("%v", err))
+	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "2", jsonData["ID"].(string), "feature ID")
-	equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
-	equals(t, 2, int(jsonData["prop_b"].(float64)), "feature value b")
-	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
-	equals(t, 2, int(jsonData["prop_d"].(float64)), "feature value d")
+	util.Equals(t, "2", jsonData["ID"].(string), "feature ID")
+	util.Equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
+	util.Equals(t, 2, int(jsonData["prop_b"].(float64)), "feature value b")
+	util.Equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
+	util.Equals(t, 2, int(jsonData["prop_d"].(float64)), "feature value d")
 	geom := jsonData["geometry"].(map[string]interface{})
-	equals(t, "Point", geom["type"].(string), "feature Type")
-	// TODO : coordinates !
+	util.Equals(t, "Point", geom["type"].(string), "feature Type")
+	coordinate := geom["coordinates"].([]interface{})
+	util.Equals(t, -120, int(coordinate[0].(float64)), "feature latitude")
+	util.Equals(t, 40, int(coordinate[1].(float64)), "feature longitude")
 
 }
 
@@ -135,20 +140,20 @@ func TestSuccessdOnlyPropUpdateFeature(t *testing.T) {
 		}
 	}`
 
-	resp := doRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
+	resp := hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
 
 	var jsonData map[string]interface{}
 	err := json.Unmarshal(body, &jsonData)
-	assert(t, err == nil, fmt.Sprintf("%v", err))
+	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "3", jsonData["ID"].(string), "feature ID")
-	equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
-	equals(t, 3, int(jsonData["prop_b"].(float64)), "feature value b")
-	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
-	equals(t, 3, int(jsonData["prop_d"].(float64)), "feature value d")
+	util.Equals(t, "3", jsonData["ID"].(string), "feature ID")
+	util.Equals(t, "propA...", jsonData["prop_a"].(string), "feature value a")
+	util.Equals(t, 3, int(jsonData["prop_b"].(float64)), "feature value b")
+	util.Equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
+	util.Equals(t, 3, int(jsonData["prop_d"].(float64)), "feature value d")
 }
 
 func TestSuccessdOnlyGeomUpdateFeature(t *testing.T) {
@@ -168,21 +173,43 @@ func TestSuccessdOnlyGeomUpdateFeature(t *testing.T) {
 		}
 	}`
 
-	resp := doRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
+	resp := hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusOK)
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
 
 	var jsonData map[string]interface{}
 	err := json.Unmarshal(body, &jsonData)
-	assert(t, err == nil, fmt.Sprintf("%v", err))
+	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	equals(t, "4", jsonData["ID"].(string), "feature ID")
-	equals(t, "propA", jsonData["prop_a"].(string), "feature value a")
-	equals(t, 4, int(jsonData["prop_b"].(float64)), "feature value b")
-	equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
-	equals(t, 4, int(jsonData["prop_d"].(float64)), "feature value d")
+	util.Equals(t, "4", jsonData["ID"].(string), "feature ID")
+	util.Equals(t, "propA", jsonData["prop_a"].(string), "feature value a")
+	util.Equals(t, 4, int(jsonData["prop_b"].(float64)), "feature value b")
+	util.Equals(t, "propC", jsonData["prop_c"].(string), "feature value c")
+	util.Equals(t, 4, int(jsonData["prop_d"].(float64)), "feature value d")
 	geom := jsonData["geometry"].(map[string]interface{})
-	equals(t, "Point", geom["type"].(string), "feature Type")
-	// TODO : coordinates !
+	util.Equals(t, "Point", geom["type"].(string), "feature Type")
+	coordinate := geom["coordinates"].([]interface{})
+	util.Equals(t, -120, int(coordinate[0].(float64)), "feature latitude")
+	util.Equals(t, 40, int(coordinate[1].(float64)), "feature longitude")
+}
+
+func TestFailedPartialGeomUpdateFeature(t *testing.T) {
+	path := "/collections/mock_a/items/4"
+	var header = make(http.Header)
+	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
+
+	jsonStr := `{
+		"type": "Feature",
+		"id": "4",
+		"geometry": {
+		}
+	}`
+
+	resp := hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusInternalServerError)
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(string(body))
+
+	util.Equals(t, "Unable to update feature in Collection: mock_a\n\tCaused by: geojson: invalid geometry\n", string(body), "feature Error with geometry")
 }

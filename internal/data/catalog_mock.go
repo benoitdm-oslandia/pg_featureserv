@@ -279,7 +279,7 @@ func (cat *CatalogMock) AddTableFeature(ctx context.Context, tableName string, j
 
 func (cat *CatalogMock) UpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
 
-	var schemaObject geojsonFeatureData
+	var schemaObject geojsonPatchFeatureData
 	err1 := json.Unmarshal(jsonData, &schemaObject)
 	if err1 != nil {
 		return "", err1
