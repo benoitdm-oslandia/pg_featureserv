@@ -443,40 +443,20 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 								AllowEmptyValue: false,
 							},
 						},
-						// &paramProperties,
-						// &paramTransform,
-						// FIXME : la projection est elle à mettre en place ?
+						// TODO keep it for the next evolution
 						// &paramCrs,
 					},
-					// TODO : schema feature à mettre en place !
-					// https://geojson.org/schema/Feature.json
-					// https://geojson.org/schema/GeoJSON.json
 					RequestBody: &openapi3.RequestBodyRef{
 						Value: &openapi3.RequestBody{
 							Description: "Add a partial feature",
 							Required:    true,
 							Content:     openapi3.NewContentWithJSONSchema(&FeatureSchema),
-							/*
-								Content: openapi3.NewContentWithJSONSchemaRef(
-									&openapi3.SchemaRef{
-										Ref: "http://geojson.org/schema/Feature.json",
-									},
-								),
-							*/
 						},
 					},
 					Responses: openapi3.Responses{
 						"200": &openapi3.ResponseRef{
 							Value: &openapi3.Response{
 								Description: "GeoJSON Feature document containing feature data",
-								/*
-									// TODO: create schema for result?
-									Content: openapi3.NewContentWithJSONSchemaRef(
-										&openapi3.SchemaRef{
-											Ref: "http://geojson.org/schema/Feature.json",
-										},
-									),
-								*/
 							},
 						},
 					},

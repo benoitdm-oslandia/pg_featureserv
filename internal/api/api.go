@@ -79,7 +79,7 @@ const (
 	ErrMsgCreateFeatureNotConform = "Unable to create new feature in Collection - data does not respect schema: %v"
 	ErrMsgCreateFeatureInCatalog  = "Unable to create new feature in Collection - catalog error: %v"
 	ErrMsgLoadFunctions           = "Unable to access Functions"
-	ErrMsgUpdateFeature           = "Unable to update feature in Collection: %v"
+	ErrMsgPartialUpdateFeature    = "Unable to update feature in Collection: %v"
 	ErrMsgFunctionNotFound        = "Function not found: %v"
 	ErrMsgFunctionAccess          = "Unable to access Function: %v"
 	ErrMsgInvalidParameterValue   = "Invalid value for parameter %v: %v"

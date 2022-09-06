@@ -67,8 +67,8 @@ func InitRouter(basePath string) *mux.Router {
 
 	addRoute(router, "/collections/{id}/items/{fid}", handleItem)
 	addRoute(router, "/collections/{id}/items/{fid}.{fmt}", handleItem)
-	addRouteWithMethod(router, "/collections/{id}/items/{fid}", handleUpdateItem, "PATCH")
-	addRouteWithMethod(router, "/collections/{id}/items/{fid}.{fmt}", handleUpdateItem, "PATCH")
+	addRouteWithMethod(router, "/collections/{id}/items/{fid}", handlePartialUpdateItem, "PATCH")
+	addRouteWithMethod(router, "/collections/{id}/items/{fid}.{fmt}", handlePartialUpdateItem, "PATCH")
 
 	addRoute(router, "/functions", handleFunctions)
 	addRoute(router, "/functions.{fmt}", handleFunctions)
@@ -559,7 +559,7 @@ func handleItem(w http.ResponseWriter, r *http.Request) *appError {
 	}
 }
 
-func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
+func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 
 	// extract request parameters
 	name := getRequestVar(routeVarID, r)
@@ -618,11 +618,11 @@ func handleUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	}
 
 	// perform update in database
-	feature, err2 := catalogInstance.UpdateTableFeature(r.Context(), name, fid, body)
+	feature, err2 := catalogInstance.PartialUpdateTableFeature(r.Context(), name, fid, body)
 	if err2 != nil {
-		return appErrorInternalFmt(err2, api.ErrMsgUpdateFeature, name)
+		return appErrorInternalFmt(err2, api.ErrMsgPartialUpdateFeature, name)
 	}
-	if len(feature) == 0 {
+	if feature == "" {
 		return appErrorNotFoundFmt(nil, api.ErrMsgFeatureNotFound, fid)
 	}
 

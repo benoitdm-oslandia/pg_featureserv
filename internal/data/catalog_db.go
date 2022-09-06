@@ -297,8 +297,8 @@ func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jso
 	return id, nil
 }
 
-func (cat *catalogDB) UpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
-	panic("catalogDB::UpdateTableFeature unimplemented")
+func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
+	panic("catalogDB::PartialUpdateTableFeature unimplemented")
 }
 
 func (cat *catalogDB) refreshTables(force bool) {
@@ -660,14 +660,6 @@ type geojsonFeatureData struct {
 	ID    string                 `json:"id,omitempty"`
 	Geom  *geojson.Geometry      `json:"geometry"`
 	Props map[string]interface{} `json:"properties"`
-}
-
-// TODO should be exported in catalog.go
-type geojsonPatchFeatureData struct {
-	Type  string                 `json:"type,omitempty"`
-	ID    string                 `json:"id,omitempty"`
-	Geom  *geojson.Geometry      `json:"geometry,omitempty"`
-	Props map[string]interface{} `json:"properties,omitempty"`
 }
 
 // TODO should be exported in catalog.go
