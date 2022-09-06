@@ -488,6 +488,7 @@ func checkItem(t *testing.T, id int) {
 	actId, _ := strconv.Atoi(v.ID)
 	util.Equals(t, id, actId, "feature id")
 	util.Equals(t, 4, len(v.Props), "# feature props")
+
 }
 
 // check if item is available and corresponds to json string
@@ -515,7 +516,6 @@ func checkItemEquals(t *testing.T, id int, jsonStr string) {
 
 	var v_test featureData
 	errUnMarshTest := json.Unmarshal(body, &v_test)
-	assert(t, errUnMarshTest == nil, fmt.Sprintf("%v", errUnMarshTest))
-
-	assert(t, reflect.DeepEqual(v, v_test), "Items are not equal")
+	util.Assert(t, errUnMarshTest == nil, fmt.Sprintf("%v", errUnMarshTest))
+	util.Assert(t, reflect.DeepEqual(v, v_test), "Items are not equal")
 }

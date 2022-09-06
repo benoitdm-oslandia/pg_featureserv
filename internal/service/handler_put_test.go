@@ -66,7 +66,7 @@ func TestReplaceFeature(t *testing.T) {
 		// create and put replacement point
 		jsonStr := catalogMock.MakeFeatureMockPointAsJSON(100, 12, 34)
 		fmt.Println(jsonStr)
-		doRequestMethodStatus(t, featureUrl, []byte(jsonStr), header, http.StatusOK)
+		doRequestMethodStatus(t, "PUT", featureUrl, []byte(jsonStr), header, http.StatusOK)
 
 		// check if item available and that point has been replaced
 		checkItemEquals(t, maxId, jsonStr)
