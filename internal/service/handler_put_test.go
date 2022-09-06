@@ -24,20 +24,21 @@ import (
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
+	"github.com/CrunchyData/pg_featureserv/util"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
 // checks swagger api contains put operation from collection schema
 func TestApiContainsMethodPut(t *testing.T) {
-	resp := doRequest(t, "/api")
+	resp := hTest.DoRequest(t, "/api")
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var v openapi3.Swagger
 	json.Unmarshal(body, &v)
 
-	equals(t, 11, len(v.Paths), "# api paths")
-	equals(t, "Provides access to a single feature identitfied by {featureId} from the specified collection", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Description, "feature path present")
-	equals(t, "replaceCollectionFeature", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Put.OperationID, "method PUT present")
+	util.Equals(t, 11, len(v.Paths), "# api paths")
+	util.Equals(t, "Provides access to a single feature identitfied by {featureId} from the specified collection", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Description, "feature path present")
+	util.Equals(t, "replaceCollectionFeature", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Put.OperationID, "method PUT present")
 }
 
 func TestReplaceFeature(t *testing.T) {
@@ -57,16 +58,23 @@ func TestReplaceFeature(t *testing.T) {
 			"name": "Sample",
 			"email": "sample@test.com"
 		}`
-		rr := doRequestMethodStatus(t, "PUT", featureUrl, []byte(jsonStr), header, http.StatusInternalServerError)
-		equals(t, http.StatusInternalServerError, rr.Code, "Should have failed")
-		assert(t, strings.Index(rr.Body.String(), fmt.Sprintf(api.ErrMsgCreateFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
+		rr := hTest.DoRequestMethodStatus(t, "PUT", featureUrl, []byte(jsonStr), header, http.StatusInternalServerError)
+		util.Equals(t, http.StatusInternalServerError, rr.Code, "Should have failed")
+		util.Assert(t, strings.Index(rr.Body.String(), fmt.Sprintf(api.ErrMsgCreateFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
 	}
 
 	{
+		var cols []string
+		for _, t := range catalogMock.TableDefs {
+			if t.ID == "mock_a" {
+				cols = t.Columns
+				break
+			}
+		}
 		// create and put replacement point
-		jsonStr := catalogMock.MakeFeatureMockPointAsJSON(100, 12, 34)
+		jsonStr := data.MakeFeatureMockPointAsJSON(100, 12, 34, cols)
 		fmt.Println(jsonStr)
-		doRequestMethodStatus(t, "PUT", featureUrl, []byte(jsonStr), header, http.StatusOK)
+		hTest.DoRequestMethodStatus(t, "PUT", featureUrl, []byte(jsonStr), header, http.StatusOK)
 
 		// check if item available and that point has been replaced
 		checkItemEquals(t, maxId, jsonStr)
