@@ -127,6 +127,26 @@ type Table struct {
 	ColDesc        []string
 }
 
+func (tbl *Table) CheckFieldsTable(props map[string]interface{}) (bool, error) {
+	p := props["properties"]
+	if p != nil {
+		props := props["properties"].(map[string]interface{})
+		for k := range props {
+			if !func(s []string, e string) bool {
+				for _, a := range s {
+					if a == e {
+						return true
+					}
+				}
+				return false
+			}(tbl.Columns, k) {
+				return false, fmt.Errorf("Properties not conform with field table: %v", k)
+			}
+		}
+	}
+	return true, nil
+}
+
 // Extent of a table
 type Extent struct {
 	Minx, Miny, Maxx, Maxy float64

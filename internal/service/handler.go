@@ -594,33 +594,20 @@ func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 		return appErrorInternalFmt(errUnMarsh, "Json not conform")
 	}
 
-	err := api.FeatureSchema.VisitJSONObject(val)
-	if err != nil {
-		return appErrorInternalFmt(err, "Data not respect schema: %v", name)
+	errSchema := api.FeatureSchema.VisitJSONObject(val)
+	if errSchema != nil {
+		return appErrorInternalFmt(errSchema, "Data not respect schema: %v", name)
 	}
 
-	// check properties with db field table!
-	i := val["properties"]
-	if i != nil {
-		props := val["properties"].(map[string]interface{})
-		for k := range props {
-			if !func(s []string, e string) bool {
-				for _, a := range s {
-					if a == e {
-						return true
-					}
-				}
-				return false
-			}(tbl.Columns, k) {
-				return appErrorInternalFmt(err, "Properties not conform with field table: %v", k)
-			}
-		}
+	check, errChck := tbl.CheckFieldsTable(val)
+	if !check && errChck != nil {
+		return appErrorInternalFmt(errChck, "validation error")
 	}
 
 	// perform update in database
-	feature, err2 := catalogInstance.PartialUpdateTableFeature(r.Context(), name, fid, body)
-	if err2 != nil {
-		return appErrorInternalFmt(err2, api.ErrMsgPartialUpdateFeature, name)
+	feature, err := catalogInstance.PartialUpdateTableFeature(r.Context(), name, fid, body)
+	if err != nil {
+		return appErrorInternalFmt(err, api.ErrMsgPartialUpdateFeature, name)
 	}
 	if feature == "" {
 		return appErrorNotFoundFmt(nil, api.ErrMsgFeatureNotFound, fid)
