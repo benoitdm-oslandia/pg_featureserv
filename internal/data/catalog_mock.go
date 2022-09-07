@@ -313,12 +313,13 @@ func (cat *CatalogMock) PartialUpdateTableFeature(ctx context.Context, tableName
 		oldFeature.PropD = int(schemaObject.Props["prop_d"].(float64))
 	}
 
-	jsonStr, err3 := json.Marshal(oldFeature)
-	if err3 != nil {
-		return "", err3
+	propNames := cat.TableDefs[0].Columns
+	jsonStr := oldFeature.toJSON(propNames)
+	if jsonStr == "" {
+		return "", fmt.Errorf("Error marshalling feature into JSON:: %v", tableName)
 	}
 
-	return string(jsonStr), nil
+	return jsonStr, nil
 }
 
 func (cat *CatalogMock) Functions() ([]*Function, error) {

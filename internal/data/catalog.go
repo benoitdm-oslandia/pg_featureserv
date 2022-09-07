@@ -127,7 +127,8 @@ type Table struct {
 	ColDesc        []string
 }
 
-func (tbl *Table) CheckFieldsTable(props map[string]interface{}) (bool, error) {
+// Check the existence of table fields from json data
+func (tbl *Table) CheckTableFields(props map[string]interface{}) (bool, error) {
 	p := props["properties"]
 	if p != nil {
 		props := props["properties"].(map[string]interface{})

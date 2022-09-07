@@ -599,7 +599,7 @@ func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 		return appErrorInternalFmt(errSchema, "Data not respect schema: %v", name)
 	}
 
-	check, errChck := tbl.CheckFieldsTable(val)
+	check, errChck := tbl.CheckTableFields(val)
 	if !check && errChck != nil {
 		return appErrorInternalFmt(errChck, "validation error")
 	}
