@@ -112,17 +112,22 @@ go-test-unit:
       - "**/go.sum"
       - ".gitlab-ci.yml"
 
+  before_script:
+    - go get github.com/boumenot/gocover-cobertura
+    - go install github.com/boumenot/gocover-cobertura
+
   script:
+    # run test:
     - |
        go test $(go list ./... | grep -v /vendor/) -v \
        -coverprofile=coverage.txt \
        -covermode count \
        -coverpkg $(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
-    - go install github.com/boumenot/gocover-cobertura
+    # generate report:
     - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage-unit_${GO_VERSION}.xml
+    # compute valid coverage total:
+    - go tool cover -func=coverage.txt
 
-  # read coverage info from test output:
-  coverage: /^coverage:\s(\d+(?:\.\d+)?%)/
   artifacts:
     reports:
       cobertura: coverage-unit_${GO_VERSION}.xml
