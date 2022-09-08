@@ -44,6 +44,9 @@ const (
 	// ContentTypeHTML
 	ContentTypeOpenAPI = "application/vnd.oai.openapi+json;version=3.0"
 
+	// ContentTypeAny
+	ContentTypeAny = "*/*"
+
 	// FormatJSON code and extension for JSON
 	FormatJSON = "json"
 
@@ -61,6 +64,9 @@ const (
 
 	// FormatXML code and extension for XML/GML
 	FormatXML = "xml"
+
+	// FormatAny code and extension for */*
+	FormatAny = "any"
 )
 
 // RequestedFormat gets the format for a request from extension or headers
@@ -84,6 +90,9 @@ func RequestedFormat(r *http.Request) string {
 	//fmt.Println("Accept:" + hdrAccept)
 	if strings.Contains(hdrAccept, ContentTypeSchemaJSON) {
 		return FormatSchemaJSON
+	}
+	if strings.Contains(hdrAccept, ContentTypeAny) {
+		return FormatAny
 	}
 	if strings.Contains(hdrAccept, ContentTypeHTML) {
 		return FormatHTML

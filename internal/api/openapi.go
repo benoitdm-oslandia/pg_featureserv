@@ -14,12 +14,79 @@ package api
 */
 
 import (
+	"encoding/json"
 	"net/url"
 
 	"github.com/CrunchyData/pg_featureserv/internal/conf"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
 )
+
+func getFeatureExample() map[string]interface{} {
+	var result map[string]interface{}
+	var jsonStr = `{"type":"Feature","geometry":{"type":"Point","coordinates":[-70.88461956597838,47.807897059236495]},"properties":{"prop_a":"propA","prop_b":1,"prop_c":"propC","prop_d":1}}`
+	err := json.Unmarshal([]byte(jsonStr), &result)
+	if err != nil {
+		return nil
+	}
+	return result
+}
+
+var FeatureSchema openapi3.Schema = openapi3.Schema{
+	Type:     "object",
+	Required: []string{},
+	Properties: map[string]*openapi3.SchemaRef{
+		"id": {
+			Value: &openapi3.Schema{
+				OneOf: []*openapi3.SchemaRef{
+					openapi3.NewSchemaRef("", &openapi3.Schema{
+						Type: "number", Format: "long",
+					}),
+					openapi3.NewSchemaRef("", &openapi3.Schema{
+						Type: "string",
+					}),
+				},
+			},
+		},
+		"type": {
+			Value: &openapi3.Schema{
+				Type:    "string",
+				Default: "Feature",
+			},
+		},
+		"geometry": {
+			Value: &openapi3.Schema{
+				Items: &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type: "string", // mandatory to validate the schema
+						OneOf: []*openapi3.SchemaRef{
+							openapi3.NewSchemaRef("https://geojson.org/schema/Point.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/LineString.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/Polygon.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/MultiPoint.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/MultiLineString.json", &openapi3.Schema{Type: "string"}),
+							openapi3.NewSchemaRef("https://geojson.org/schema/MultiPolygon.json", &openapi3.Schema{Type: "string"}),
+						},
+					},
+				},
+			},
+		},
+		"properties": {
+			Value: &openapi3.Schema{
+				Type: "object",
+			},
+		},
+		"bbox": {
+			Value: &openapi3.Schema{
+				Type:     "array",
+				MinItems: 4,
+				MaxItems: openapi3.Uint64Ptr(4),
+				Items:    openapi3.NewSchemaRef("", openapi3.NewFloat64Schema().WithMin(-180).WithMax(180)),
+			},
+		},
+	},
+	Example: getFeatureExample(),
+}
 
 // GetOpenAPIContent returns a Swagger OpenAPI structure
 func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
@@ -47,6 +114,16 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 		Value: &openapi3.Parameter{
 			Description:     "ID of function.",
 			Name:            "functionId",
+			In:              "path",
+			Required:        true,
+			Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+			AllowEmptyValue: false,
+		},
+	}
+	paramFeatureID := openapi3.ParameterRef{
+		Value: &openapi3.Parameter{
+			Name:            "featureId",
+			Description:     "Id of feature in collection to retrieve data for.",
 			In:              "path",
 			Required:        true,
 			Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
@@ -216,7 +293,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 			Name:            "type",
 			Description:     "Data schema type (create, update, etc.).",
 			In:              "query",
-			Required:        false,
+			Required:        true,
 			Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
 			AllowEmptyValue: false,
 		},
@@ -365,6 +442,35 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 						},
 					},
 				},
+				Post: &openapi3.Operation{
+					OperationID: "createCollectionFeature",
+					Parameters: openapi3.Parameters{
+						&paramCollectionID,
+						// TODO keep it for the next evolution
+						// &paramCrs,
+					},
+					RequestBody: &openapi3.RequestBodyRef{
+						Value: &openapi3.RequestBody{
+							Description: "Add a new feature",
+							Required:    true,
+							Content:     openapi3.NewContentWithJSONSchema(&FeatureSchema),
+						},
+					},
+					Responses: openapi3.Responses{
+						"201": &openapi3.ResponseRef{
+							Value: &openapi3.Response{
+								Description: "Empty body with location header",
+								Headers: map[string]*openapi3.HeaderRef{
+									"location": {
+										Value: &openapi3.Header{
+											Description: "Contains a link to access to the new feature data",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			apiBase + "collections/{collectionId}/schema": &openapi3.PathItem{
 				Summary:     "Feature schema for collection",
@@ -374,6 +480,16 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 					Parameters: openapi3.Parameters{
 						&paramCollectionID,
 						&paramType,
+						&openapi3.ParameterRef{
+							Value: &openapi3.Parameter{
+								Name:            "accept",
+								Description:     "Only accept application/schema+schema",
+								In:              "header",
+								Required:        true,
+								Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+								AllowEmptyValue: false,
+							},
+						},
 					},
 					Responses: openapi3.Responses{
 						"200": &openapi3.ResponseRef{
@@ -399,16 +515,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 					OperationID: "getCollectionFeature",
 					Parameters: openapi3.Parameters{
 						&paramCollectionID,
-						&openapi3.ParameterRef{
-							Value: &openapi3.Parameter{
-								Name:            "featureId",
-								Description:     "Id of feature in collection to retrieve data for.",
-								In:              "path",
-								Required:        true,
-								Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
-								AllowEmptyValue: false,
-							},
-						},
+						&paramFeatureID,
 						&paramProperties,
 						&paramTransform,
 						&paramCrs,

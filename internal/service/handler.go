@@ -286,7 +286,9 @@ func handleCollectionSchemas(w http.ResponseWriter, r *http.Request) *appError {
 
 	ctx := r.Context()
 	switch format {
-	case api.FormatSchemaJSON:
+	case api.FormatSchemaJSON,
+		// workaround to have swagger working:
+		api.FormatAny:
 		{
 			switch schemaType {
 			case "create":
