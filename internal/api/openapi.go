@@ -53,6 +53,16 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 			AllowEmptyValue: false,
 		},
 	}
+	paramFeatureID := openapi3.ParameterRef{
+		Value: &openapi3.Parameter{
+			Name:            "featureId",
+			Description:     "Id of feature in collection to retrieve data for.",
+			In:              "path",
+			Required:        true,
+			Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+			AllowEmptyValue: false,
+		},
+	}
 	paramBbox := openapi3.ParameterRef{
 		Value: &openapi3.Parameter{
 			Name:        "bbox",
@@ -365,6 +375,36 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 						},
 					},
 				},
+				Post: &openapi3.Operation{
+					OperationID: "createCollectionFeature",
+					Parameters: openapi3.Parameters{
+						&paramCollectionID,
+						&paramFeatureID,
+						// TODO keep it for the next evolution
+						// &paramCrs,
+					},
+					RequestBody: &openapi3.RequestBodyRef{
+						Value: &openapi3.RequestBody{
+							Description: "Add a new feature",
+							Required:    true,
+							Content:     openapi3.NewContentWithJSONSchema(&FeatureSchema),
+						},
+					},
+					Responses: openapi3.Responses{
+						"201": &openapi3.ResponseRef{
+							Value: &openapi3.Response{
+								Description: "Empty body with location header",
+								Headers: map[string]*openapi3.HeaderRef{
+									"location": {
+										Value: &openapi3.Header{
+											Description: "Contains a link to access to the new feature data",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			apiBase + "collections/{collectionId}/schema": &openapi3.PathItem{
 				Summary:     "Feature schema for collection",
@@ -399,16 +439,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 					OperationID: "getCollectionFeature",
 					Parameters: openapi3.Parameters{
 						&paramCollectionID,
-						&openapi3.ParameterRef{
-							Value: &openapi3.Parameter{
-								Name:            "featureId",
-								Description:     "Id of feature in collection to retrieve data for.",
-								In:              "path",
-								Required:        true,
-								Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
-								AllowEmptyValue: false,
-							},
-						},
+						&paramFeatureID,
 						&paramProperties,
 						&paramTransform,
 						&paramCrs,
@@ -433,16 +464,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 					OperationID: "updateCollectionFeature",
 					Parameters: openapi3.Parameters{
 						&paramCollectionID,
-						&openapi3.ParameterRef{
-							Value: &openapi3.Parameter{
-								Name:            "featureId",
-								Description:     "Id of feature in collection to retrieve data for.",
-								In:              "path",
-								Required:        true,
-								Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
-								AllowEmptyValue: false,
-							},
-						},
+						&paramFeatureID,
 						// TODO keep it for the next evolution
 						// &paramCrs,
 					},
