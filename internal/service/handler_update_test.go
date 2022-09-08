@@ -34,7 +34,6 @@ func TestApiContainsMethodPatchFeature(t *testing.T) {
 	err := json.Unmarshal(body, &v)
 	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	util.Equals(t, 11, len(v.Paths), "# api paths")
 	util.Equals(t, "Provides access to a single feature identitfied by {featureId} from the specified collection", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Description, "path present")
 	util.Equals(t, "updateCollectionFeature", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Patch.OperationID, "method PATCH present")
 }
