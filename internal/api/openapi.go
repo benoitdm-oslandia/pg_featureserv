@@ -429,6 +429,38 @@ func GetOpenAPIContent(urlBase string) *openapi3.Swagger {
 						},
 					},
 				},
+				Patch: &openapi3.Operation{
+					OperationID: "updateCollectionFeature",
+					Parameters: openapi3.Parameters{
+						&paramCollectionID,
+						&openapi3.ParameterRef{
+							Value: &openapi3.Parameter{
+								Name:            "featureId",
+								Description:     "Id of feature in collection to retrieve data for.",
+								In:              "path",
+								Required:        true,
+								Schema:          &openapi3.SchemaRef{Value: openapi3.NewStringSchema()},
+								AllowEmptyValue: false,
+							},
+						},
+						// TODO keep it for the next evolution
+						// &paramCrs,
+					},
+					RequestBody: &openapi3.RequestBodyRef{
+						Value: &openapi3.RequestBody{
+							Description: "Add a partial feature",
+							Required:    true,
+							Content:     openapi3.NewContentWithJSONSchema(&FeatureSchema),
+						},
+					},
+					Responses: openapi3.Responses{
+						"200": &openapi3.ResponseRef{
+							Value: &openapi3.Response{
+								Description: "GeoJSON Feature document containing feature data",
+							},
+						},
+					},
+				},
 			},
 			apiBase + "functions": &openapi3.PathItem{
 				Summary:     "Functions metadata",
