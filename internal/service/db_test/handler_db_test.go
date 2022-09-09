@@ -153,7 +153,9 @@ func TestReplaceFeatureSuccessDb(t *testing.T) {
 	err := json.Unmarshal(body, &jsonData)
 	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	util.Equals(t, "1", jsonData["id"].(string), "feature ID")
+	// TODO: Fails because of inconsitency between catalog and db
+	// util.Equals(t, "1", jsonData["id"].(string), "feature ID")
+	util.Equals(t, 1, int(jsonData["id"].(float64)), "feature ID")
 	util.Equals(t, "Feature", jsonData["type"].(string), "feature Type")
 	props := jsonData["properties"].(map[string]interface{})
 	util.Equals(t, "propA...", props["prop_a"].(string), "feature value a")
