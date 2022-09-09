@@ -696,7 +696,6 @@ func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	return nil
 }
 
-// TODO: DRAFT
 func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
 	// extract request parameters
 	name := getRequestVar(routeVarID, r)
@@ -722,6 +721,19 @@ func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
 	body, errBody := ioutil.ReadAll(r.Body)
 	if errBody != nil || len(body) == 0 {
 		return appErrorInternalFmt(errBody, "Unable to read request body for Collection: %v", name)
+	}
+
+	//--- check if body matches the schema
+	// schema for replace is the same as in create
+	createSchema, errGetSch := getCreateItemSchema(r.Context(), tbl)
+	if errGetSch != nil {
+		return appErrorInternalFmt(errGetSch, errGetSch.Error())
+	}
+	var val interface{}
+	_ = json.Unmarshal(body, &val)
+	errValSch := createSchema.VisitJSON(val)
+	if errValSch != nil {
+		return appErrorBadRequest(errValSch, api.ErrMsgReplaceFeatureNotConform)
 	}
 
 	// perform replace in database
