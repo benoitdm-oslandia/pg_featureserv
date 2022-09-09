@@ -299,7 +299,7 @@ func handleCollectionSchemas(w http.ResponseWriter, r *http.Request) *appError {
 				return writeCreateItemSchemaJSON(ctx, w, tbl)
 			case "replace":
 				// The "replace" schema is identical to the "create" schema.
-				// http: //docs.ogc.org/DRAFTS/20-002.html#feature-geojson
+				// http://docs.ogc.org/DRAFTS/20-002.html#feature-geojson
 				return writeCreateItemSchemaJSON(ctx, w, tbl)
 			case "update":
 				return writeUpdateItemSchemaJSON(ctx, w, tbl)
