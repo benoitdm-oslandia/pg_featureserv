@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+	"github.com/CrunchyData/pg_featureserv/internal/data"
 	"github.com/CrunchyData/pg_featureserv/util"
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -205,4 +206,13 @@ func TestReplaceFeatureOnlyGeomFailure(t *testing.T) {
 
 	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
 	util.Assert(t, strings.Index(string(body), api.ErrMsgReplaceFeatureNotConform) == 0, "Should have failed with not conform")
+}
+
+func TestReplaceAfterAll(t *testing.T) {
+	// Reset the mock catalog state after all replace tests
+	catalogMock = data.CatMockInstance()
+	catalogInstance = catalogMock
+
+	hTest = util.MakeHttpTesting("http://test", "/pg_featureserv", InitRouter("/pg_featureserv"))
+	Initialize()
 }
