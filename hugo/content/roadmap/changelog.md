@@ -1,4 +1,9 @@
-# pg_featureserv Version History
+---
+title: "Version History"
+date:
+draft: false
+weight: 5
+---
 
 ## Version ??
 *Released: TBD*
