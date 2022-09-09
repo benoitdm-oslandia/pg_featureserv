@@ -154,8 +154,10 @@ func TestReplaceFeatureMissingRequiredPropertiesFailure(t *testing.T) {
 	}`
 
 	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusBadRequest)
+	body, _ := ioutil.ReadAll(resp.Body)
+
 	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
-	util.Assert(t, strings.Index(resp.Body.String(), fmt.Sprintf(api.ErrMsgReplaceFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
+	util.Assert(t, strings.Index(string(body), api.ErrMsgReplaceFeatureNotConform) == 0, "Should have failed with not conform")
 }
 
 func TestReplaceFeatureOnlyPropFailure(t *testing.T) {
@@ -175,8 +177,10 @@ func TestReplaceFeatureOnlyPropFailure(t *testing.T) {
 	}`
 
 	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusBadRequest)
+	body, _ := ioutil.ReadAll(resp.Body)
+
 	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
-	util.Assert(t, strings.Index(resp.Body.String(), fmt.Sprintf(api.ErrMsgReplaceFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
+	util.Assert(t, strings.Index(string(body), api.ErrMsgReplaceFeatureNotConform) == 0, "Should have failed with not conform")
 }
 
 func TestReplaceFeatureOnlyGeomFailure(t *testing.T) {
@@ -197,7 +201,8 @@ func TestReplaceFeatureOnlyGeomFailure(t *testing.T) {
 	}`
 
 	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusBadRequest)
+	body, _ := ioutil.ReadAll(resp.Body)
 
 	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
-	util.Assert(t, strings.Index(resp.Body.String(), fmt.Sprintf(api.ErrMsgReplaceFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
+	util.Assert(t, strings.Index(string(body), api.ErrMsgReplaceFeatureNotConform) == 0, "Should have failed with not conform")
 }
