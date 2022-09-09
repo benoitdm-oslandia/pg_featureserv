@@ -302,7 +302,60 @@ func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName s
 }
 
 func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
-	panic("catalogDB::ReplaceTableFeature unimplemented")
+	var schemaObject geojsonFeatureData
+	err := json.Unmarshal(jsonData, &schemaObject)
+	if err != nil {
+		return "", err
+	}
+	var colValueStr string
+	var values []interface{}
+
+	tbl, err := cat.TableByName(tableName)
+	if err != nil {
+		return "", err
+	}
+	var i = 0
+	for c, t := range tbl.DbTypes {
+		if c == tbl.IDColumn {
+			continue // ignore id column
+		}
+
+		i++
+		colValueStr += c
+		colValueStr += "="
+		colValueStr += fmt.Sprintf("$%d", i)
+		if t.Type == "int4" {
+			values = append(values, int(schemaObject.Props[c].(float64)))
+		} else {
+			values = append(values, schemaObject.Props[c])
+		}
+
+		if i < len(tbl.Columns)-1 {
+			colValueStr += ", "
+		}
+
+	}
+
+	i++
+	colValueStr += ", " + tbl.GeometryColumn
+	colValueStr += fmt.Sprintf(", ST_GeomFromGeoJSON($%d)", i)
+	geomJson, _ := schemaObject.Geom.MarshalJSON()
+	values = append(values, geomJson)
+
+	sqlStatement := fmt.Sprintf(`
+		UPDATE %s
+		SET %s
+		WHERE %s=%s
+		RETURNING(*,%s)`,
+		tbl.ID, colValueStr, tbl.IDColumn, id, tbl.GeometryColumn)
+
+	var jsonStr string = ""
+	err = cat.dbconn.QueryRow(ctx, sqlStatement, values...).Scan(&jsonStr)
+	if err != nil {
+		return "", err
+	}
+
+	return jsonStr, nil
 }
 
 func (cat *catalogDB) refreshTables(force bool) {
