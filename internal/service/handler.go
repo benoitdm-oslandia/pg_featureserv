@@ -71,6 +71,9 @@ func InitRouter(basePath string) *mux.Router {
 	addRouteWithMethod(router, "/collections/{id}/items/{fid}", handlePartialUpdateItem, "PATCH")
 	addRouteWithMethod(router, "/collections/{id}/items/{fid}.{fmt}", handlePartialUpdateItem, "PATCH")
 
+	addRouteWithMethod(router, "/collections/{id}/items/{fid}", handleReplaceItem, "PUT")
+	addRouteWithMethod(router, "/collections/{id}/items/{fid}.{fmt}", handleReplaceItem, "PUT")
+
 	addRoute(router, "/functions", handleFunctions)
 	addRoute(router, "/functions.{fmt}", handleFunctions)
 
