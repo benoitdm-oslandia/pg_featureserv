@@ -338,6 +338,7 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 
 	i++
 	colValueStr += ", " + tbl.GeometryColumn
+	colValueStr += "="
 	colValueStr += fmt.Sprintf(", ST_GeomFromGeoJSON($%d)", i)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
