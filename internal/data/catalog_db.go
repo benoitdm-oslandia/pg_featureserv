@@ -339,15 +339,15 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 	i++
 	colValueStr += ", " + tbl.GeometryColumn
 	colValueStr += "="
-	colValueStr += fmt.Sprintf(", ST_GeomFromGeoJSON($%d)", i)
+	colValueStr += fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
 
 	sqlStatement := fmt.Sprintf(`
-		UPDATE %s
+		UPDATE %s AS t
 		SET %s
 		WHERE %s=%s
-		RETURNING(*,%s)`,
+		RETURNING ST_AsGeoJson(t.*, '%s')`,
 		tbl.ID, colValueStr, tbl.IDColumn, id, tbl.GeometryColumn)
 
 	var jsonStr string = ""
