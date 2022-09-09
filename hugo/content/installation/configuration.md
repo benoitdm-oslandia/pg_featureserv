@@ -151,6 +151,17 @@ If the `TlsServerCertificateFile` and `TlsServerPrivateKeyFile`
 are specified then HTTPS support will be enabled,
 at the port specified by `HttpsPort`.
 
+For testing purposes you can generate a **self-signed key/cert pair** using `openssl`:
+```bash
+openssl req  -nodes -new -x509  -keyout server.key -out server.crt
+```
+These are set in the configuration file:
+
+```toml
+TlsServerCertificateFile = "/path/server.crt"
+TlsServerPrivateKeyFile = "/path/server.key"
+```
+
 #### UrlBase
 
 The Base URL is the URL endpoint at which the service is advertised.
