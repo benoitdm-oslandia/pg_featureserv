@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
@@ -39,7 +40,7 @@ func TestApiContainsMethodPut(t *testing.T) {
 	util.Equals(t, "replaceCollectionFeature", v.Paths.Find("/collections/{collectionId}/items/{featureId}").Put.OperationID, "method PUT present")
 }
 
-func TestSuccessReplaceFeature(t *testing.T) {
+func TestReplaceFeatureSuccess(t *testing.T) {
 	path := "/collections/mock_a/items/1"
 	var header = make(http.Header)
 	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
@@ -86,7 +87,7 @@ func TestSuccessReplaceFeature(t *testing.T) {
 
 }
 
-func TestFailurePartialReplaceFeature(t *testing.T) {
+func TestReplaceFeatureRequiredPropertiesSuccess(t *testing.T) {
 	path := "/collections/mock_a/items/1"
 	var header = make(http.Header)
 	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
@@ -110,12 +111,54 @@ func TestFailurePartialReplaceFeature(t *testing.T) {
 	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusOK)
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	fmt.Println(string(body))
+	var jsonData map[string]interface{}
+	err := json.Unmarshal(body, &jsonData)
+	util.Assert(t, err == nil, fmt.Sprintf("%v", err))
 
-	util.Equals(t, "Unable to replace feature in Collection: mock_a\n\tCaused by: properties mismatch\n", string(body), "feature Error properties mismatch")
+	util.Equals(t, "1", jsonData["id"].(string), "feature ID")
+	util.Equals(t, "Feature", jsonData["type"].(string), "feature Type")
+	props := jsonData["properties"].(map[string]interface{})
+
+	util.Equals(t, "propA...", props["prop_a"].(string), "feature value a")
+	util.Equals(t, 2, int(props["prop_b"].(float64)), "feature value b")
+	// TODO: Quelle est la valeur par défaut des champs non requis ???
+	util.Equals(t, "", props["prop_c"].(string), "feature value c")
+	// TODO: Quelle est la valeur par défaut des champs non requis ???
+	util.Equals(t, 0, int(props["prop_d"].(float64)), "feature value d")
+	geom := jsonData["geometry"].(map[string]interface{})
+	util.Equals(t, "Point", geom["type"].(string), "feature Type")
+	coordinate := geom["coordinates"].([]interface{})
+	util.Equals(t, -120, int(coordinate[0].(float64)), "feature latitude")
+	util.Equals(t, 40, int(coordinate[1].(float64)), "feature longitude")
 }
 
-func TestFailureOnlyPropReplaceFeature(t *testing.T) {
+func TestReplaceFeatureMissingRequiredPropertiesFailure(t *testing.T) {
+	path := "/collections/mock_a/items/1"
+	var header = make(http.Header)
+	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
+
+	jsonStr := `{
+		"type": "Feature",
+		"id": "1",
+		"geometry": {
+			"type": "Point",
+			"coordinates": [
+			-120,
+			40
+			]
+		},
+		"properties": {
+			"prop_a": "propA...",
+			"prop_d": 2
+		}
+	}`
+
+	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusBadRequest)
+	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
+	util.Assert(t, strings.Index(resp.Body.String(), fmt.Sprintf(api.ErrMsgReplaceFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
+}
+
+func TestReplaceFeatureOnlyPropFailure(t *testing.T) {
 	path := "/collections/mock_a/items/1"
 	var header = make(http.Header)
 	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
@@ -131,15 +174,12 @@ func TestFailureOnlyPropReplaceFeature(t *testing.T) {
 		}
 	}`
 
-	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusOK)
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	fmt.Println(string(body))
-
-	util.Equals(t, "Unable to update feature in Collection: mock_a\n\tCaused by: geojson: missing geometry\n", string(body), "feature Error missing geometry")
+	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusBadRequest)
+	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
+	util.Assert(t, strings.Index(resp.Body.String(), fmt.Sprintf(api.ErrMsgReplaceFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
 }
 
-func TestFailureOnlyGeomReplaceFeature(t *testing.T) {
+func TestReplaceFeatureOnlyGeomFailure(t *testing.T) {
 	path := "/collections/mock_a/items/1"
 	var header = make(http.Header)
 	header.Add("Accept", api.ContentTypeSchemaPatchJSON)
@@ -156,10 +196,8 @@ func TestFailureOnlyGeomReplaceFeature(t *testing.T) {
 		}
 	}`
 
-	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusOK)
-	body, _ := ioutil.ReadAll(resp.Body)
+	resp := hTest.DoRequestMethodStatus(t, "PUT", path, []byte(jsonStr), header, http.StatusBadRequest)
 
-	fmt.Println(string(body))
-
-	util.Equals(t, "Unable to update feature in Collection: mock_a\n\tCaused by: geojson: missing properties\n", string(body), "feature Error missing properties")
+	util.Equals(t, http.StatusBadRequest, resp.Code, "Should have failed")
+	util.Assert(t, strings.Index(resp.Body.String(), fmt.Sprintf(api.ErrMsgReplaceFeatureNotConform+"\n", "mock_a")) == 0, "Should have failed with not conform")
 }
