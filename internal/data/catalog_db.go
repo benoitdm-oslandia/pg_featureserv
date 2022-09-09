@@ -343,6 +343,8 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
 
+	// RETURNING ST_AsGeoJson(t.*, 'tbl.GeometryColumn') returns the id colum into the properties of
+	// the feature (feature.properties.id instead of feature.id)
 	sqlStatement := fmt.Sprintf(`
 		UPDATE %s AS t
 		SET %s
@@ -356,7 +358,23 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 		return "", err
 	}
 
-	return jsonStr, nil
+	// Move back feature.properties.id to feature.id
+	var newJsonData map[string]interface{}
+	err = json.Unmarshal([]byte(jsonStr), &newJsonData)
+	if err != nil {
+		return "", err
+	}
+	props := newJsonData["properties"].(map[string]interface{})
+
+	newJsonData["id"] = props["id"]
+	delete(props, "id")
+
+	newJsonByte, err := json.Marshal(newJsonData)
+	if err != nil {
+		return "", err
+	}
+
+	return string(newJsonByte), nil
 }
 
 func (cat *catalogDB) refreshTables(force bool) {
