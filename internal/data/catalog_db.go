@@ -301,18 +301,18 @@ func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName s
 	panic("catalogDB::PartialUpdateTableFeature unimplemented")
 }
 
-func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) (string, error) {
+func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) error {
 	var schemaObject geojsonFeatureData
 	err := json.Unmarshal(jsonData, &schemaObject)
 	if err != nil {
-		return "", err
+		return err
 	}
 	var colValueStr string
 	var values []interface{}
 
 	tbl, err := cat.TableByName(tableName)
 	if err != nil {
-		return "", err
+		return err
 	}
 	var i = 0
 	for c, t := range tbl.DbTypes {
@@ -343,38 +343,18 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
 
-	// RETURNING ST_AsGeoJson(t.*, 'tbl.GeometryColumn') returns the id colum into the properties of
-	// the feature (feature.properties.id instead of feature.id)
 	sqlStatement := fmt.Sprintf(`
 		UPDATE %s AS t
 		SET %s
-		WHERE %s=%s
-		RETURNING ST_AsGeoJson(t.*, '%s')`,
-		tbl.ID, colValueStr, tbl.IDColumn, id, tbl.GeometryColumn)
+		WHERE %s=%s`,
+		tbl.ID, colValueStr, tbl.IDColumn, id)
 
-	var jsonStr string = ""
-	err = cat.dbconn.QueryRow(ctx, sqlStatement, values...).Scan(&jsonStr)
+	err = cat.dbconn.QueryRow(ctx, sqlStatement, values...).Scan()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Move back feature.properties.id to feature.id
-	var newJsonData map[string]interface{}
-	err = json.Unmarshal([]byte(jsonStr), &newJsonData)
-	if err != nil {
-		return "", err
-	}
-	props := newJsonData["properties"].(map[string]interface{})
-
-	newJsonData["id"] = props["id"]
-	delete(props, "id")
-
-	newJsonByte, err := json.Marshal(newJsonData)
-	if err != nil {
-		return "", err
-	}
-
-	return string(newJsonByte), nil
+	return nil
 }
 
 func (cat *catalogDB) refreshTables(force bool) {
