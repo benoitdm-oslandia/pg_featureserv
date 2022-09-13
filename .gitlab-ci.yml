@@ -5,29 +5,14 @@ stages:
   - 📦 build
   - 🚀 deploy
 
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
 variables:
-#  PIP_CACHE_DIR: "$CI_PROJECT_FOLDER/.cache/pip"
   PROJECT_FOLDER: "pg_featureserv"
-  REPO_PLUGIN_URL: "https://git.oslandia.net/Client-projects/2007_17_pg_featureserv_mobiliseyourcity"
+  REPO_PLUGIN_URL: "https://git.oslandia.net/Client-projects/geoplateforme-ign-pg-featureserv"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
   POSTGRES_VERSION: "13"
   POSTGIS_VERSION: "3.2"
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.npm"
+  GO_VERSION: "1.19"
 
-# Pip's cache doesn't store the go packages
-# https://pip.pypa.io/en/stable/reference/pip_install/#caching
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
-# cache:
-#   key:
-#     files:
-#       - requirements/*.txt
-#   paths:
-#     - .cache/pip
 
 # ======================================================================================
 # -- CONTAINERS JOBS -------------------------------------------------------------------
@@ -131,3 +116,42 @@ go-test-unit:
   artifacts:
     reports:
       cobertura: coverage-unit_${GO_VERSION}.xml
+
+
+# ======================================================================================
+# -- BUILD JOBS -------------------------------------------------------------------------
+# ======================================================================================
+
+# -- HUGO DOCUMENTATION
+build-hugo-doc:
+  tags:
+    - docker
+  stage: 📦 build
+  image: "golang:${GO_VERSION}"
+
+  only:
+    refs:
+      - merge_requests
+      - main
+      - develop
+    changes:
+      - "**/*.md"
+      - ".gitlab-ci.yml"
+
+  before_script:
+    - git submodule update --init hugo/themes/crunchy-hugo-theme
+    - go get github.com/gohugoio/hugo
+    - go install github.com/gohugoio/hugo
+
+  script:
+   # retrieve pg_featureserv version from go code
+   - APP_VERSION=$(grep 'var setVersion string = ' internal/conf/appconfig.go| cut -d '"' -f 2)
+   # update documentation version
+   - echo "number = \"${APP_VERSION}\"" > hugo/data/version.toml
+   - make docs
+
+  artifacts:
+    name: "pg_featureserv-documentation-${APP_VERSION}"
+    expose_as: "pg_featureserv-documentation-latest"
+    paths:
+      - docs/
