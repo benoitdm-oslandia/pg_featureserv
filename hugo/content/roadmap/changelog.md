@@ -5,11 +5,21 @@ draft: false
 weight: 5
 ---
 
-## Version ??
+## Version 1.4
 *Released: TBD*
+
+### New Features
+
+* Support for POST/PUT/PATCH/DELETE transactions
+
+### Improvements
+
+* Rework documentation
+* improve CI tests
 
 ### Bug Fixes
 
+* Fix minor bugs via staticchecker
 * Fix CQL parser to allow multiple AND/OR terms (#162)
 
 
