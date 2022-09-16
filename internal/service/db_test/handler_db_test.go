@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 
 func TestProperDbInit(t *testing.T) {
 	tables, _ := cat.Tables()
-	util.Equals(t, 1, len(tables), "# tables in DB")
+	util.Equals(t, 2, len(tables), "# tables in DB")
 }
 
 func TestPropertiesAllFromDb(t *testing.T) {
