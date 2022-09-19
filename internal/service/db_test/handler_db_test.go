@@ -218,6 +218,32 @@ func TestPartialUpdateFeatureDb(t *testing.T) {
 
 }
 
+func TestDeleteFeatureDb(t *testing.T) {
+
+	//--- retrieve max feature id before delete
+	var features []string
+	params := data.QueryParam{Limit: 100000, Offset: 0, Crs: 4326}
+	features, _ = cat.TableFeatures(context.Background(), "mock_b", &params)
+
+	featuresNumbersBefore := len(features)
+
+	// -- do the request call but we have to force the catalogInstance to db during this operation
+	hTest.DoDeleteRequestStatus(t, "/collections/mock_b/items/1", http.StatusNoContent)
+
+	//--- retrieve max feature id after delete
+	features, _ = cat.TableFeatures(context.Background(), "mock_b", &params)
+	featuresNumbersAfter := len(features)
+
+	util.Assert(t, featuresNumbersBefore-1 == featuresNumbersAfter, "# feature still in db/not deleted")
+
+}
+
+func TestDeleteUnknownFeatureDb(t *testing.T) {
+
+	hTest.DoDeleteRequestStatus(t, "/collections/mock_b/items/999999999", http.StatusNotFound)
+
+}
+
 // check if item is available and is not empty
 // copy from service/handler_test.go
 func checkItem(t *testing.T, id int) []byte {
