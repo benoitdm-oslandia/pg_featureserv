@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 
 func TestProperDbInit(t *testing.T) {
 	tables, _ := cat.Tables()
-	util.Equals(t, 2, len(tables), "# tables in DB")
+	util.Equals(t, 4, len(tables), "# tables in DB")
 }
 
 func TestPropertiesAllFromDb(t *testing.T) {
@@ -83,7 +83,7 @@ func TestCreateFeatureDb(t *testing.T) {
 
 	//--- retrieve max feature id before insert
 	var features []string
-	params := data.QueryParam{Limit: 100, Offset: 0, Crs: 4326}
+	params := data.QueryParam{Limit: 100000, Offset: 0, Crs: 4326}
 	features, _ = cat.TableFeatures(context.Background(), "mock_a", &params)
 	maxIdBefore := len(features)
 
