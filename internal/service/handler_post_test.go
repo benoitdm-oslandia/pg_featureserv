@@ -24,7 +24,7 @@ import (
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
-	"github.com/CrunchyData/pg_featureserv/util"
+	"github.com/CrunchyData/pg_featureserv/internal/util"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
