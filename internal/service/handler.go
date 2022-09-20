@@ -509,14 +509,8 @@ func getCreateItemSchema(ctx context.Context, table *api.Table) (openapi3.Schema
 	props.Properties = make(map[string]*openapi3.SchemaRef)
 	for k, v := range table.DbTypes {
 		if k != table.IDColumn {
-			propType := string(v.Type)
-			if v.Type.ToOpenApiType() != "" {
-				propType = v.Type.ToOpenApiType()
-			}
 			props.Properties[k] = &openapi3.SchemaRef{
-				Value: &openapi3.Schema{
-					Type: propType,
-				},
+				Value: v.Type.ToOpenApiSchema(),
 			}
 		}
 	}
@@ -565,15 +559,9 @@ func getUpdateItemSchema(ctx context.Context, table *api.Table) (openapi3.Schema
 	props.Properties = make(map[string]*openapi3.SchemaRef)
 	for k, v := range table.DbTypes {
 		if k != table.IDColumn {
-			propType := string(v.Type)
-			if v.Type.ToOpenApiType() != "" {
-				propType = v.Type.ToOpenApiType()
-			}
 			props.Properties[k] = &openapi3.SchemaRef{
 				Value: openapi3.NewOneOfSchema(
-					&openapi3.Schema{
-						Type: propType,
-					},
+					v.Type.ToOpenApiSchema(),
 					&openapi3.Schema{
 						Type: "null",
 					},
