@@ -14,7 +14,7 @@ import (
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	"github.com/CrunchyData/pg_featureserv/internal/service"
-	"github.com/CrunchyData/pg_featureserv/util"
+	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
