@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CrunchyData/pg_featureserv/util"
+	"github.com/CrunchyData/pg_featureserv/internal/util"
 )
 
 func TestRootEmptyBasePath(t *testing.T) {
