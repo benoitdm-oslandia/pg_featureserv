@@ -177,3 +177,28 @@ content-encoding: gzip
 content-length: 23  
 location: http://localhost:9000/collections/e.admin_0_countries/items/10  
 ```
+
+### Update Feature
+
+To update a feature you need to provide a valid JSON document containing the data and the id of the feature to update.
+
+The JSON document must match the JSON schema provided by the path `/collections/{coll-name}/schema?type=update`. Once the JSON document you can send it to the collection by using the `PATCH` HTTP method with the path `/collections/{coll-name}/items/10` with given id.
+
+#### *Example*
+
+Using `curl` tool, you will have this type of request with your JSON document saved locally as `data.json` file:
+
+```bash
+curl -X PATCH "http://localhost:9000/collections/e.admin_0_countries/items/10" \
+     -H "accept: */*" \
+     -H "Content-Type: application/merge-patch+json" \
+     -d "@data.json"
+```
+
+You should receive a 204 HTTP response with in the header the url of the newly update feature like:
+
+```raw
+access-control-allow-origin: *  
+content-encoding: gzip  
+location: http://localhost:9000/collections/e.admin_0_countries/items/10  
+```
