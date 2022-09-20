@@ -43,7 +43,7 @@ func TestProperDbInit(t *testing.T) {
 func TestPropertiesAllFromDb(t *testing.T) {
 	rr := hTest.DoRequest(t, "/collections/mock_a/items?limit=2")
 
-	var v util.FeatureCollection
+	var v api.FeatureCollection
 	errUnMarsh := json.Unmarshal(hTest.ReadBody(rr), &v)
 	util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
 
@@ -245,7 +245,7 @@ func checkItem(t *testing.T, id int) []byte {
 	resp := hTest.DoRequest(t, path)
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	var v util.GeojsonFeatureData
+	var v api.GeojsonFeatureData
 	errUnMarsh := json.Unmarshal(body, &v)
 	util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
 
