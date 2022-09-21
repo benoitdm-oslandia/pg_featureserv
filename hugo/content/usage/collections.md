@@ -194,4 +194,3 @@ curl -X DELETE http://localhost:9000/collections/ne.admin_0_countries/items/10
 ```
 
 You should receive a 204 HTTP response code when operation is successful.
-
