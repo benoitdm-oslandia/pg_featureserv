@@ -1,5 +1,21 @@
 package db_test
 
+/*
+ Copyright 2022 Crunchy Data Solutions, Inc.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ Date     : October 2022
+ Authors  : Benoit De Mezzo (benoit dot de dot mezzo at oslandia dot com)
+*/
+
 import (
 	"encoding/json"
 	"fmt"
@@ -9,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+	"github.com/CrunchyData/pg_featureserv/internal/conf"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	"github.com/CrunchyData/pg_featureserv/internal/service"
 	"github.com/CrunchyData/pg_featureserv/internal/util"
@@ -28,11 +45,15 @@ type DbTests struct {
 
 // ...
 func TestMain(m *testing.M) {
+
+	conf.InitConfig("", false) // getting default configuration
+
 	log.Debug("init : Db/Service")
 	db = util.CreateTestDb()
 	// defer util.CloseTestDb(db)
 
 	cat = data.CatDBInstance()
+
 	service.SetCatalogInstance(cat)
 
 	hTest = util.MakeHttpTesting("http://test", "/pg_featureserv", "../../../assets", service.InitRouter("/pg_featureserv"))
@@ -51,6 +72,22 @@ func TestRunnerHandlerDb(t *testing.T) {
 		beforeEachRun()
 		test := DbTests{Test: t}
 		test.TestProperDbInit()
+		afterEachRun()
+	})
+	t.Run("CACHE", func(t *testing.T) {
+		beforeEachRun()
+		test := DbTests{Test: t}
+		test.TestCacheActivationDb()
+		test.TestLastModifiedDb()
+		test.TestEtagDb()
+		test.TestWeakEtagStableOnRequestsDb()
+		test.TestEtagHeaderIfNoneMatchDb()
+		test.TestEtagHeaderIfNonMatchAfterReplaceDb()
+		test.TestEtagHeaderIfNonMatchMalformedEtagDb()
+		test.TestEtagHeaderIfNonMatchVariousEtagsDb()
+		test.TestEtagHeaderIfNonMatchWeakEtagDb()
+		test.TestEtagHeaderIfMatchDb()
+		test.TestEtagReplaceFeatureDb()
 		afterEachRun()
 	})
 	t.Run("GET", func(t *testing.T) {
