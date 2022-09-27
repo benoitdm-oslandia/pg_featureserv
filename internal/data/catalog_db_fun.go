@@ -1,7 +1,7 @@
 package data
 
 /*
- Copyright 2019 Crunchy Data Solutions, Inc.
+ Copyright 2022 Crunchy Data Solutions, Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -11,6 +11,7 @@ package data
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+
 */
 
 import (
@@ -183,23 +184,23 @@ func extendLeft(arr []string, size int) []string {
 	return arr2
 }
 
-func (cat *catalogDB) FunctionFeatures(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]*api.GeojsonFeatureData, error) {
+func (cat *catalogDB) FunctionFeatures(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]*api.GeojsonFeatureData, []string, error) {
 	fn, err := cat.FunctionByName(name)
 	if err != nil || fn == nil {
-		return nil, err
+		return nil, nil, err
 	}
 	errArg := checkArgsValid(fn, args)
 	if errArg != nil {
 		log.Debug("ERROR: " + errArg.Error())
-		return nil, errArg
+		return nil, nil, errArg
 	}
 	propCols := removeNames(param.Columns, fn.GeometryColumn, "")
 	idColIndex := indexOfName(propCols, FunctionIDColumnName)
 	sql, argValues := sqlGeomFunction(fn, args, propCols, param)
 	log.Debugf("Function features query: %v", sql)
 	log.Debugf("Function %v Args: %v", name, argValues)
-	features, err := readFeaturesWithArgs(ctx, cat.dbconn, sql, argValues, idColIndex, propCols)
-	return features, err
+	features, etags, err := readFeaturesWithArgs(ctx, cat.dbconn, sql, argValues, idColIndex, propCols, cat.cache)
+	return features, etags, err
 }
 
 func (cat *catalogDB) FunctionData(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]map[string]interface{}, error) {

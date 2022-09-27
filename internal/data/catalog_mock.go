@@ -1,7 +1,7 @@
 package data
 
 /*
- Copyright 2019 Crunchy Data Solutions, Inc.
+ Copyright 2022 Crunchy Data Solutions, Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -11,6 +11,7 @@ package data
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+
 */
 
 import (
@@ -18,9 +19,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"strconv"
+	"time"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -28,6 +32,7 @@ type CatalogMock struct {
 	TableDefs    []*api.Table
 	tableData    map[string][]*featureMock
 	FunctionDefs []*api.Function
+	cache        Cache
 }
 
 var instance CatalogMock
@@ -173,14 +178,18 @@ func newCatalogMock() CatalogMock {
 		funB,
 		funNoParam,
 	}
+	cache := makeCache()
 	catMock := CatalogMock{
 		TableDefs:    tables,
 		tableData:    tableData,
 		FunctionDefs: funDefs,
+		cache:        cache,
 	}
 
 	return catMock
 }
+
+// -------------------------------------------------
 
 func (cat *CatalogMock) SetIncludeExclude(includeList []string, excludeList []string) {
 }
@@ -227,23 +236,23 @@ func (cat *CatalogMock) TableFeatures(ctx context.Context, name string, param *Q
 	return featureClones, nil
 }
 
-func (cat *CatalogMock) TableFeature(ctx context.Context, name string, id string, param *QueryParam) (*api.GeojsonFeatureData, error) {
+func (cat *CatalogMock) TableFeature(ctx context.Context, name string, id string, param *QueryParam) (*api.GeojsonFeatureData, string, error) {
 	features, ok := cat.tableData[name]
 	if !ok {
 		// table not found - indicated by empty value returned
-		return nil, nil
+		return nil, "", nil
 	}
 	index, err := strconv.Atoi(id)
 	if err != nil {
 		// a malformed int is treated as feature not found
-		return nil, nil
+		return nil, "", nil
 	}
 
 	index--
 
 	// TODO: return not found if index out of range
 	if index < 0 || index >= len(features) {
-		return nil, nil
+		return nil, "", nil
 	}
 	// handle empty property list
 	propNames := cat.TableDefs[0].Columns
@@ -253,11 +262,20 @@ func (cat *CatalogMock) TableFeature(ctx context.Context, name string, id string
 
 	for elementIdx, feature := range features {
 		if feature.ID == id {
-			return features[elementIdx].newPropsFilteredFeature(propNames), nil
+
+			feature_data := features[elementIdx].newPropsFilteredFeature(propNames)
+
+			sum := fnv.New32a()
+			encodedContent, _ := json.Marshal(feature_data)
+			sum.Write(encodedContent)
+			weakEtag := fmt.Sprint(sum.Sum32())
+			cat.cache.AddWeakEtag(weakEtag, map[string]interface{}{"lastModified": time.Now().String()})
+			return feature_data, weakEtag, nil
 		}
 	}
+
 	// not found
-	return nil, nil
+	return nil, "", nil
 
 }
 
@@ -409,6 +427,19 @@ func (cat *CatalogMock) DeleteTableFeature(ctx context.Context, tableName string
 	return errors.New("Feature not found")
 }
 
+func (cat *CatalogMock) CheckStrongEtags(etagsList []string) (bool, error) {
+	for _, strongEtag := range etagsList {
+		found, err := cat.cache.ContainsWeakEtag(strongEtag)
+		if err != nil {
+			return false, err
+		}
+		if found {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (cat *CatalogMock) Functions() ([]*api.Function, error) {
 	return cat.FunctionDefs, nil
 }
@@ -423,9 +454,9 @@ func (cat *CatalogMock) FunctionByName(name string) (*api.Function, error) {
 	return nil, nil
 }
 
-func (cat *CatalogMock) FunctionFeatures(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]*api.GeojsonFeatureData, error) {
+func (cat *CatalogMock) FunctionFeatures(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]*api.GeojsonFeatureData, []string, error) {
 	// TODO:
-	return nil, nil
+	return nil, nil, nil
 }
 
 func (cat *CatalogMock) FunctionData(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]map[string]interface{}, error) {

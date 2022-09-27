@@ -7,7 +7,7 @@ import (
 )
 
 /*
- Copyright 2019 Crunchy Data Solutions, Inc.
+ Copyright 2022 Crunchy Data Solutions, Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+
 */
 
 const (
@@ -43,9 +44,9 @@ type Catalog interface {
 	// It returns nil if the table does not exist
 	TableFeatures(ctx context.Context, name string, param *QueryParam) ([]*api.GeojsonFeatureData, error)
 
-	// TableFeature returns the JSON text for a table feature with given id
+	// TableFeature returns the JSON text for a table feature with given id, along with its weak etag value
 	// It returns an empty string if the table or feature does not exist
-	TableFeature(ctx context.Context, name string, id string, param *QueryParam) (*api.GeojsonFeatureData, error)
+	TableFeature(ctx context.Context, name string, id string, param *QueryParam) (*api.GeojsonFeatureData, string, error)
 
 	// AddTableFeature returns the id of the new feature created in the table tableName
 	// using the JSON data to create the feature
@@ -66,9 +67,15 @@ type Catalog interface {
 	// It returns nil if the function does not exist
 	FunctionByName(name string) (*api.Function, error)
 
-	FunctionFeatures(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]*api.GeojsonFeatureData, error)
+	FunctionFeatures(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]*api.GeojsonFeatureData, []string, error)
 
 	FunctionData(ctx context.Context, name string, args map[string]string, param *QueryParam) ([]map[string]interface{}, error)
+
+	// CheckStrongEtags checks if at least one of the etags provided is present into the cache
+	// Returns true at the first etag detected as present, false otherwise
+	// -> error != nil if a malformed etag is detected (wrong encoding, bad format.)
+	// -> The etags are provided have to be in their strong form and Base64 encoded
+	CheckStrongEtags(etagsList []string) (bool, error)
 
 	Close()
 }

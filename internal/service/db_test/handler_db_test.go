@@ -21,6 +21,7 @@ package db_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -134,6 +135,23 @@ func TestReplaceFeatureSuccessDb(t *testing.T) {
 
 	resp := hTest.DoRequestMethodStatus(t, "GET", path, []byte(""), header, http.StatusOK)
 	body, _ := ioutil.ReadAll(resp.Body)
+
+	// Provoque un accès au cache des etag -------------------------------------------------
+	var header2 = make(http.Header)
+	header.Add("If-None-Match", "\"unknown_etag\"")
+	hTest.DoRequestMethodStatus(t, "GET", path, []byte(""), header2, http.StatusOK)
+
+	r2 := hTest.DoRequestMethodStatus(t, "GET", path, []byte(""), nil, http.StatusOK)
+	strongEtag := r2.Header().Get("ETag")
+	fmt.Printf("etag sur GET: " + strongEtag + "\n")
+	decodedStrongEtag, _ := base64.StdEncoding.DecodeString(strongEtag)
+	decodedValue := string(decodedStrongEtag)
+	fmt.Printf("etag decodé: " + decodedValue + "\n")
+
+	header2 = make(http.Header)
+	header2.Add("If-None-Match", strongEtag)
+	hTest.DoRequestMethodStatus(t, "GET", path, []byte(""), header2, http.StatusNotModified)
+	// -------------------------------------------------------------------------------------
 
 	fmt.Println(string(body))
 
