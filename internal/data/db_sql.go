@@ -1,14 +1,5 @@
 package data
 
-import (
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/CrunchyData/pg_featureserv/internal/api"
-	log "github.com/sirupsen/logrus"
-)
-
 /*
  Copyright 2019 - 2024 Crunchy Data Solutions, Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +11,22 @@ import (
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+
+ Date     : October 2022
+ Authors  : Benoit De Mezzo (benoit dot de dot mezzo at oslandia dot com)
+        	Amaury Zarzelli (amaury dot zarzelli at ign dot fr)
+			Jean-philippe Bazonnais (jean-philippe dot bazonnais at ign dot fr)
+			Nicolas Revelant (nicolas dot revelant at ign dot fr)
 */
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/CrunchyData/pg_featureserv/internal/api"
+	log "github.com/sirupsen/logrus"
+)
 
 const sqlTables = `SELECT
 	Format('%s.%s', n.nspname, c.relname) AS id,
@@ -125,7 +131,8 @@ func sqlExtentExact(tbl *api.Table) string {
 	return fmt.Sprintf(sqlFmtExtentExact, tbl.GeometryColumn, tbl.Srid, tbl.Schema, tbl.Table)
 }
 
-const sqlFmtFeatures = "SELECT %v %v FROM \"%s\".\"%s\" %v %v %v %s;"
+// xmin is used as weak eTag value
+const sqlFmtFeatures = "SELECT %v,xmin %v FROM \"%s\".\"%s\" %v %v %v %s;"
 
 func sqlFeatures(tbl *api.Table, param *QueryParam) (string, []interface{}) {
 	geomCol := sqlGeomCol(tbl.GeometryColumn, tbl.Srid, param)
@@ -195,7 +202,8 @@ func sqlColExpr(name string, dbtype api.PGType) string {
 	return name
 }
 
-const sqlFmtFeature = "SELECT %v %v FROM \"%s\".\"%s\" WHERE \"%v\" = $1 LIMIT 1"
+// xmin is used as weak eTag value
+const sqlFmtFeature = "SELECT %v,xmin %v FROM \"%s\".\"%s\" WHERE \"%v\" = $1 LIMIT 1"
 
 func sqlFeature(tbl *api.Table, param *QueryParam) string {
 	geomCol := sqlGeomCol(tbl.GeometryColumn, tbl.Srid, param)
