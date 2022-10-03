@@ -98,6 +98,39 @@ JOIN proargarrays aa ON (p.oid = aa.oid)
 LEFT JOIN pg_description d ON (p.oid = d.objoid)
 ORDER BY id`
 
+const SqlNotifyFunction = `CREATE OR REPLACE FUNCTION notify_event() RETURNS TRIGGER AS $$
+DECLARE
+		data json;
+		notification json;
+		new_xmin text;
+		old_xmin text;
+BEGIN
+		IF (TG_OP = 'DELETE') THEN
+			data = row_to_json(OLD);
+			new_xmin = NULL;
+		ELSIF (TG_OP = 'INSERT') THEN
+			data = row_to_json(NEW);
+			old_xmin = NULL;
+			new_xmin = NEW.xmin::text;
+		ELSIF (TG_OP = 'UPDATE') THEN
+			data = row_to_json(NEW);
+			old_xmin = OLD.xmin::text;
+			new_xmin = NEW.xmin::text;
+		END IF;
+		-- Contruct the notification as a JSON string.
+		notification = json_build_object(
+										'table',TG_TABLE_NAME,
+										'action', TG_OP,
+										'old_xmin', OLD.xmin::text,
+										'new_xmin', new_xmin,
+										'data', data);
+		PERFORM pg_notify('table_update', notification::text);
+		RETURN NULL;
+END;
+
+$$ LANGUAGE plpgsql;
+`
+
 func sqlFunctions(funSchemas []string) string {
 	inSchemas := quotedList(funSchemas)
 	return strings.Replace(sqlFunctionsTemplate, "#SCHEMAS#", inSchemas, 1)
