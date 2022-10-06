@@ -1,0 +1,157 @@
+stages:
+
+  - 🐍 lint
+  - 🤞 test
+  - 📦 build
+  - 🚀 deploy
+
+variables:
+  PROJECT_FOLDER: "pg_featureserv"
+  REPO_PLUGIN_URL: "https://git.oslandia.net/Client-projects/geoplateforme-ign-pg-featureserv"
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
+  POSTGRES_VERSION: "13"
+  POSTGIS_VERSION: "3.2"
+  GO_VERSION: "1.19"
+
+
+# ======================================================================================
+# -- CONTAINERS JOBS -------------------------------------------------------------------
+# ======================================================================================
+
+
+
+# ======================================================================================
+# -- LINT JOBS -------------------------------------------------------------------------
+# ======================================================================================
+
+include:
+  - template: Code-Quality.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+sast:
+  tags:
+    - docker
+  stage: 🐍 lint
+
+code_quality:
+  tags:
+    - linux_vm
+  stage: 🐍 lint
+
+go-linter:
+  tags:
+    - docker
+  stage: 🐍 lint
+  image: "golang:1.18"
+  only:
+    refs:
+      - merge_requests
+      - main
+      - develop
+    changes:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".gitlab-ci.yml"
+  before_script:
+    - apt-get update && apt-get install -y pre-commit curl
+    - pre-commit install --install-hooks
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.49.0
+  script:
+    - pre-commit run -a -v
+
+
+
+# ======================================================================================
+# -- TEST JOBS -------------------------------------------------------------------------
+# ======================================================================================
+
+# -- GO TEST
+go-test-unit:
+  tags:
+    - docker
+  stage: 🤞 test
+  variables:
+      POSTGRES_DB: pg_featureserv
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgis/${POSTGRES_DB}"
+  parallel:
+    matrix:
+      - GO_VERSION: "1.13"
+      - GO_VERSION: "1.16"
+      - GO_VERSION: "1.18"
+      - GO_VERSION: "1.19"
+  image: "golang:${GO_VERSION}"
+  services:
+    - name: postgis/postgis:${POSTGRES_VERSION}-${POSTGIS_VERSION}-alpine
+      alias: postgis
+  only:
+    refs:
+      - merge_requests
+      - main
+      - develop
+    changes:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".gitlab-ci.yml"
+
+  before_script:
+    - go get github.com/boumenot/gocover-cobertura
+    - go install github.com/boumenot/gocover-cobertura
+
+  script:
+    # run test:
+    - |
+       go test $(go list ./... | grep -v /vendor/) -v \
+       -coverprofile=coverage.txt \
+       -covermode count \
+       -coverpkg $(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
+    # generate report:
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage-unit_${GO_VERSION}.xml
+    # compute valid coverage total:
+    - go tool cover -func=coverage.txt
+
+  artifacts:
+    reports:
+      cobertura: coverage-unit_${GO_VERSION}.xml
+
+
+# ======================================================================================
+# -- BUILD JOBS -------------------------------------------------------------------------
+# ======================================================================================
+
+# -- HUGO DOCUMENTATION
+build-hugo-doc:
+  tags:
+    - docker
+  stage: 📦 build
+  image: "golang:${GO_VERSION}"
+
+  only:
+    refs:
+      - merge_requests
+      - main
+      - develop
+    changes:
+      - "**/*.md"
+      - ".gitlab-ci.yml"
+
+  before_script:
+    - git submodule update --init hugo/themes/crunchy-hugo-theme
+    - go get github.com/gohugoio/hugo
+    - go install github.com/gohugoio/hugo
+
+  script:
+   # retrieve pg_featureserv version from go code
+   - APP_VERSION=$(grep 'var setVersion string = ' internal/conf/appconfig.go| cut -d '"' -f 2)
+   # update documentation version
+   - echo "number = \"${APP_VERSION}\"" > hugo/data/version.toml
+   - make docs
+
+  artifacts:
+    name: "pg_featureserv-documentation-${APP_VERSION}"
+    expose_as: "pg_featureserv-documentation-latest"
+    paths:
+      - docs/
