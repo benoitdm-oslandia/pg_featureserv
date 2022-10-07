@@ -116,9 +116,12 @@ func insertSimpleDataset(db *pgxpool.Pool) {
 		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5)
 	`)
 
-	// TODO: only compatible with postgresql 14 or higher
+	// Separate requests to drop trigger, because CREATE OR REPLACE TRIGGER only since postgresql 14
+	dropTriggerBytes := []byte(`
+	DROP TRIGGER IF EXISTS %[1]s_notify_event ON %[1]s;
+	`)
 	triggerBytes := []byte(`
-	CREATE OR REPLACE TRIGGER %[1]s_notify_event
+	CREATE TRIGGER %[1]s_notify_event
 	AFTER INSERT OR UPDATE OR DELETE ON %[1]s
 			FOR EACH ROW EXECUTE PROCEDURE notify_event();
 	`)
@@ -130,7 +133,9 @@ func insertSimpleDataset(db *pgxpool.Pool) {
 			geomStr, _ := f.Geom.MarshalJSON()
 			b.Queue(insertStatement, geomStr, f.Props["prop_a"], f.Props["prop_b"], f.Props["prop_c"], f.Props["prop_d"])
 		}
+		dropTriggerStatement := fmt.Sprintf(string(dropTriggerBytes), tableName)
 		triggerStatement := fmt.Sprintf(string(triggerBytes), tableName)
+		b.Queue(dropTriggerStatement)
 		b.Queue(triggerStatement)
 		res := db.SendBatch(ctx, b)
 		if res == nil {
@@ -204,9 +209,12 @@ func insertComplexDataset(db *pgxpool.Pool) {
 		INSERT INTO public.mock_multi (geometry, prop_t, prop_i, prop_l, prop_f, prop_r, prop_b, prop_d, prop_j)
 		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5, $6, $7, $8, $9)`
 
-	// TODO: only compatible with postgresql 14 or higher
+	// Separate requests to drop trigger, because CREATE OR REPLACE TRIGGER only since postgresql 14
+	dropTriggerStatement := `
+		DROP TRIGGER IF EXISTS mock_multi_notify_event ON mock_multi;
+		`
 	triggerStatement := `
-		CREATE OR REPLACE TRIGGER mock_multi_notify_event
+		CREATE TRIGGER mock_multi_notify_event
 		AFTER INSERT OR UPDATE OR DELETE ON mock_multi
 				FOR EACH ROW EXECUTE PROCEDURE notify_event();
 		`
@@ -215,6 +223,7 @@ func insertComplexDataset(db *pgxpool.Pool) {
 		geomStr, _ := f.Geom.MarshalJSON()
 		b.Queue(sqlStatement, geomStr, f.Props["prop_t"], f.Props["prop_i"], f.Props["prop_l"], f.Props["prop_f"], f.Props["prop_r"], f.Props["prop_b"], f.Props["prop_d"], f.Props["prop_j"])
 	}
+	b.Queue(dropTriggerStatement)
 	b.Queue(triggerStatement)
 	res := db.SendBatch(ctx, b)
 	if res == nil {
