@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+	"github.com/CrunchyData/pg_featureserv/internal/conf"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	"github.com/CrunchyData/pg_featureserv/internal/service"
 	"github.com/CrunchyData/pg_featureserv/util"
@@ -33,6 +34,8 @@ type geojsonFeatureData struct {
 }
 
 func TestMain(m *testing.M) {
+	conf.Configuration.Database.AllowWrite = true
+
 	db = util.CreateTestDb()
 	defer util.CloseTestDb(db)
 
@@ -48,23 +51,6 @@ func TestMain(m *testing.M) {
 func TestProperDbInit(t *testing.T) {
 	tables, _ := cat.Tables()
 	util.Equals(t, 2, len(tables), "# table in DB")
-}
-
-func TestTestPropertiesAllFromDb(t *testing.T) {
-	/*rr := hTest.DoRequest(t, "/collections/mock_a/items?limit=2")
-
-	var v FeatureCollection
-	errUnMarsh := json.Unmarshal(hTest.ReadBody(rr), &v)
-	util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
-
-	// Note that JSON numbers are read as float64
-	util.Equals(t, 2, len(v.Features), "# features")
-	util.Equals(t, 4, len(v.Features[0].Props), "feature 1 # properties")
-
-	util.Equals(t, "propA", v.Features[0].Props["prop_a"], "feature 1 # property A")
-	util.Equals(t, 1.0, v.Features[0].Props["prop_b"], "feature 1 # property B")
-	util.Equals(t, "propC", v.Features[0].Props["prop_c"], "feature 1 # property C")
-	util.Equals(t, 1.0, v.Features[0].Props["prop_d"], "feature 1 # property D")*/
 }
 
 func TestCreateFeatureWithBadGeojsonInputDb(t *testing.T) {
