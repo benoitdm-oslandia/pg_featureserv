@@ -59,7 +59,7 @@ func TestGetComplexCollectionUpdateSchema(t *testing.T) {
 }
 
 func TestUpdateComplexFeatureDb(t *testing.T) {
-	path := "/collections/mock_multi/items/2"
+	path := "/collections/mock_multi/items/100"
 	var header = make(http.Header)
 	header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
 
@@ -72,21 +72,21 @@ func TestUpdateComplexFeatureDb(t *testing.T) {
 	loc := resp.Header().Get("Location")
 
 	util.Assert(t, len(loc) > 1, "Header location must not be empty")
-	util.Equals(t, fmt.Sprintf("http://test/collections/mock_multi/items/%d", 2), loc,
+	util.Equals(t, fmt.Sprintf("http://test/collections/mock_multi/items/%d", 100), loc,
 		"Header location must contain valid data")
 
 	// check if it can be read
-	checkItem(t, "mock_multi", 2)
+	checkItem(t, "mock_multi", 100)
 }
 
 func TestUpdateSimpleFeatureDb(t *testing.T) {
-	path := "/collections/mock_a/items/2"
+	path := "/collections/mock_a/items/10"
 	var header = make(http.Header)
 	header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
 
 	jsonStr := `{
 		"type": "Feature",
-		"id": "2",
+		"id": "10",
 		"geometry": {
 			"type": "Point",
 			"coordinates": [
@@ -104,22 +104,22 @@ func TestUpdateSimpleFeatureDb(t *testing.T) {
 	loc := resp.Header().Get("Location")
 
 	util.Assert(t, len(loc) > 1, "Header location must not be empty")
-	util.Equals(t, fmt.Sprintf("http://test/collections/mock_a/items/%d", 2), loc,
+	util.Equals(t, fmt.Sprintf("http://test/collections/mock_a/items/%d", 10), loc,
 		"Header location must contain valid data")
 
 	// check if it can be read
-	feature := checkItem(t, "mock_a", 2)
+	feature := checkItem(t, "mock_a", 10)
 	var jsonData map[string]interface{}
 	errUnMarsh := json.Unmarshal(feature, &jsonData)
 	util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
 
-	util.Equals(t, "2", jsonData["id"].(string), "feature ID")
+	util.Equals(t, "10", jsonData["id"].(string), "feature ID")
 	util.Equals(t, "Feature", jsonData["type"].(string), "feature Type")
 	props := jsonData["properties"].(map[string]interface{})
 	util.Equals(t, "propA...", props["prop_a"].(string), "feature value a")
 	util.Equals(t, 2, int(props["prop_b"].(float64)), "feature value b")
 	util.Equals(t, "propC", props["prop_c"].(string), "feature value c")
-	util.Equals(t, 2, int(props["prop_d"].(float64)), "feature value d")
+	util.Equals(t, 1, int(props["prop_d"].(float64)), "feature value d")
 	geom := jsonData["geometry"].(map[string]interface{})
 	util.Equals(t, "Point", geom["type"].(string), "feature Type")
 	coordinate := geom["coordinates"].([]interface{})
