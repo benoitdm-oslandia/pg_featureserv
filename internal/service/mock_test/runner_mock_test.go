@@ -97,6 +97,7 @@ func TestRunnerHandlerMock(t *testing.T) {
 		m.TestDeleteFeatureErrorUnknownCollection()
 		m.TestDeleteFeatureErrorUnusedQueryParameters()
 		m.TestDeleteUnknownFeature()
+		afterEachRun()
 	})
 	t.Run("PUT", func(t *testing.T) {
 		beforeEachRun()
@@ -108,6 +109,7 @@ func TestRunnerHandlerMock(t *testing.T) {
 		m.TestReplaceFeatureOnlyPropFailure()
 		m.TestReplaceFeatureRequiredPropertiesSuccess()
 		m.TestReplaceFeatureSuccess()
+		afterEachRun()
 	})
 	t.Run("POST", func(t *testing.T) {
 		beforeEachRun()
@@ -116,6 +118,7 @@ func TestRunnerHandlerMock(t *testing.T) {
 		m.TestApiContainsMethodPostFeature()
 		m.TestGetCollectionCreateSchema()
 		m.TestCreateFeature()
+		afterEachRun()
 	})
 	t.Run("UPDATE", func(t *testing.T) {
 		beforeEachRun()
@@ -127,6 +130,7 @@ func TestRunnerHandlerMock(t *testing.T) {
 		m.TestUpdateFeatureOnlyGeomSuccess()
 		m.TestUpdateFeatureOnlyPropSuccess()
 		m.TestUpdateFeaturePartialGeomFailure()
+		afterEachRun()
 	})
 
 	// nettoyage après execution des tests
