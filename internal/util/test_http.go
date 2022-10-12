@@ -51,7 +51,7 @@ func (hTest *HttpTesting) Setup() {
 			HttpPort:   9000,
 			UrlBase:    hTest.UrlBase,
 			BasePath:   hTest.BasePath,
-			AssetsPath: "../../assets",
+			AssetsPath: "../../../assets",
 			TransformFunctions: []string{
 				"ST_Centroid",
 				"ST_PointOnSurface",
