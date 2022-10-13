@@ -30,7 +30,7 @@ type DbTests struct {
 func TestMain(m *testing.M) {
 	log.Info("init : Db/Service")
 	db = util.CreateTestDb()
-	defer util.CloseTestDb(db)
+	// defer util.CloseTestDb(db)
 
 	cat = data.CatDBInstance()
 	service.SetCatalogInstance(cat)
@@ -104,13 +104,16 @@ func beforeRun() {
 // Run after all tests
 func afterRun() {
 	log.Info("afterRun")
-	// some stuff...
+	// close Db
+	util.CloseTestDb(db)
 }
 
 // Run before each test
 func beforeEachRun() {
 	log.Info("beforeEachRun")
-	// some stuff...
+	// drop and create table
+	util.InsertSimpleDataset(db)
+	util.InsertComplexDataset(db)
 }
 
 // Run after each test
