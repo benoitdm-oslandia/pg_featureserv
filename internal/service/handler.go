@@ -699,6 +699,7 @@ func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 }
 
 func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
+
 	// extract request parameters
 	name := getRequestVar(routeVarID, r)
 	fid := getRequestVar(routeVarFeatureID, r)
@@ -726,7 +727,7 @@ func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
 	}
 
 	//--- check if body matches the schema
-	// schema for replace is the same as in create
+	// schema for replace is the same as in create http://docs.ogc.org/DRAFTS/20-002.html#feature-geojson
 	createSchema, errGetSch := getCreateItemSchema(r.Context(), tbl)
 	if errGetSch != nil {
 		return appErrorInternalFmt(errGetSch, errGetSch.Error())
