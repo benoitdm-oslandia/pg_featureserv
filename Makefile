@@ -94,7 +94,7 @@ multi-stage-docker: Dockerfile set-multi-stage build-common ## Generate a BASE_I
 release: clean docs docker  ##            Generate the docs, a local build, and then uses the local build to generate BASE_IMAGE container
 
 test:  ##               Run the tests locally
-	go test -v ./internal/cql ./internal/service
+	go test -v $(shell go list ./... | grep -vw db_test)
 
 install: $(PROGRAM) docs  ##            This will install the program locally
 	$(MKDIR) -p $(DESTDIR)/usr/bin
