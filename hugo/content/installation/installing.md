@@ -54,7 +54,36 @@ docker run -e DATABASE_URL=postgres://username:password@host/dbname -p 9000:9000
   ```
 
 * This creates a `pg_featureserv` executable in the application directory
-* (Optional) Run the unit tests using `go test ./...`
+* (Optional) To run the unit tests, use the following command :
+
+  ```bash
+  # all tests
+  go test ./...
+  ```
+
+  Or, to run only CRUD-like tests in mock mode :
+
+  ```bash
+  # all CRUD tests (mock mode)
+  go test -run ^TestRunnerHandlerMock$ github.com/CrunchyData/pg_featureserv/internal/service/mock_test
+  ```
+
+  ```bash
+  # a group of CRUD tests (mock mode)
+  go test -run ^TestRunnerHandlerMock/DELETE$ github.com/CrunchyData/pg_featureserv/internal/service/mock_test
+  ```
+
+  ```bash
+  # an unique CRUD test (mock mode)
+  go test -run ^TestRunnerHandlerMock/DELETE/TestDeleteExistingFeature$ github.com/CrunchyData/pg_featureserv/internal/service/mock_test
+  ```
+
+  It's also possible to run the tests on a database :
+
+  ```bash
+  # all CRUD tests (db mode)
+  go test -run ^TestRunnerHandlerDb$ github.com/CrunchyData/pg_featureserv/internal/service/db_test
+  ```
 
 To run the build to verify it:
 
@@ -67,7 +96,7 @@ To run the build to verify it:
 * Open the service home page in a browser:
   `http:/localhost:9000/home.html`
 
-### Build a Docker image
+### D. Build a Docker image
 
 * Build the `pg_featureserv` executable with the command:
 ```bash
