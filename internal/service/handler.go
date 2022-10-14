@@ -324,7 +324,7 @@ func handleCreateCollectionItem(w http.ResponseWriter, r *http.Request) *appErro
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorBadRequest(nil, "No parameter allowed")
+		return appErrorBadRequest(nil, api.ErrMsgNoParameters)
 	}
 
 	//--- check feature availability
@@ -380,7 +380,7 @@ func handleDeleteCollectionItem(w http.ResponseWriter, r *http.Request) *appErro
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorBadRequest(nil, "No parameter allowed")
+		return appErrorBadRequest(nil, api.ErrMsgNoParameters)
 	}
 
 	//--- check collection availability
@@ -649,7 +649,7 @@ func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorBadRequest(nil, "No parameter allowed")
+		return appErrorBadRequest(nil, api.ErrMsgNoParameters)
 	}
 
 	// check that collection exists
@@ -704,7 +704,7 @@ func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorBadRequest(nil, "No parameter allowed")
+		return appErrorBadRequest(nil, api.ErrMsgNoParameters)
 	}
 
 	// check that collection exists
