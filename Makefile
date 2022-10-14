@@ -40,7 +40,7 @@ build-docker: $(PROGRAM) Dockerfile  ##  Generate a CentOS 7 container with APPV
 release: clean docs build build-docker  ##       Generate the docs, a local build, and then uses the local build to generate a CentOS 7 container
 
 test:  ##          Run the tests locally
-	go test -v ./internal/cql ./internal/service
+	go test -v $(shell go list ./... | grep -vw db_test)
 
 install: $(PROGRAM) docs  ##       This will install the program locally
 	$(MKDIR) -p $(DESTDIR)/usr/bin
