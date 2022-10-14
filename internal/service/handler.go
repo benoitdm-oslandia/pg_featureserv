@@ -244,7 +244,7 @@ func handleCollection(w http.ResponseWriter, r *http.Request) *appError {
 
 	tbl, err := catalogInstance.TableByName(name)
 	if tbl == nil && err == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err, api.ErrMsgCollectionNotFound, name)
 	}
 	catalogInstance.TableReload(name)
 	content := tbl.NewCollectionInfo()
@@ -281,10 +281,10 @@ func handleCollectionSchemas(w http.ResponseWriter, r *http.Request) *appError {
 	name := getRequestVar(routeVarID, r)
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgCollectionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 
 	queryValues := r.URL.Query()
@@ -324,39 +324,39 @@ func handleCreateCollectionItem(w http.ResponseWriter, r *http.Request) *appErro
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorMsg(nil, "No parameter allowed", http.StatusBadRequest)
+		return appErrorBadRequest(nil, "No parameter allowed")
 	}
 
 	//--- check feature availability
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgCollectionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 
 	//--- json body
 	bodyContent, errBody := ioutil.ReadAll(r.Body)
 	if errBody != nil || len(bodyContent) == 0 {
-		return appErrorInternalFmt(errBody, "Unable to read request body for Collection: %v", name)
+		return appErrorInternal(errBody, "Unable to read request body for Collection: %v", name)
 	}
 
 	//--- check if body matches the schema
 	createSchema, errGetSch := getCreateItemSchema(r.Context(), tbl)
 	if errGetSch != nil {
-		return appErrorInternalFmt(errGetSch, errGetSch.Error())
+		return appErrorInternal(errGetSch, errGetSch.Error())
 	}
 	var val interface{}
 	_ = json.Unmarshal(bodyContent, &val)
 	errValSch := createSchema.VisitJSON(val)
 	if errValSch != nil {
-		return appErrorInternalFmt(errValSch, api.ErrMsgCreateFeatureNotConform, name)
+		return appErrorBadRequest(errValSch, api.ErrMsgCreateFeatureNotConform, name)
 	}
 
 	newId, err2 := catalogInstance.AddTableFeature(r.Context(), name, bodyContent)
 	if err2 != nil {
-		return appErrorInternalFmt(err2, api.ErrMsgCreateFeatureInCatalog, name)
+		return appErrorInternal(err2, api.ErrMsgCreateFeatureInCatalog, name)
 	}
 
 	w.Header().Set("Location", fmt.Sprintf("%scollections/%s/items/%d", urlBase, name, newId))
@@ -373,28 +373,28 @@ func handleDeleteCollectionItem(w http.ResponseWriter, r *http.Request) *appErro
 	//--- check request parameters
 	index, err := strconv.Atoi(fid)
 	if err != nil || index < 0 {
-		return appErrorBadRequest(nil, api.ErrMsgInvalidParameterValue)
+		return appErrorBadRequest(nil, api.ErrMsgInvalidParameterValue, routeVarFeatureID, fid)
 	}
 
 	//--- check query parameters
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorMsg(nil, "No parameter allowed", http.StatusBadRequest)
+		return appErrorBadRequest(nil, "No parameter allowed")
 	}
 
 	//--- check collection availability
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternal(err1, api.ErrMsgCollectionAccess)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 
 	err2 := catalogInstance.DeleteTableFeature(r.Context(), name, fid)
 	if err2 != nil {
-		return appErrorNotFoundFmt(err2, api.ErrMsgFeatureNotFound, fid)
+		return appErrorNotFound(err2, api.ErrMsgFeatureNotFound, fid)
 	}
 	w.WriteHeader(http.StatusNoContent)
 	return nil
@@ -411,15 +411,15 @@ func handleCollectionItems(w http.ResponseWriter, r *http.Request) *appError {
 	name := getRequestVar(routeVarID, r)
 	reqParam, err := parseRequestParams(r)
 	if err != nil {
-		return appErrorMsg(err, err.Error(), http.StatusBadRequest)
+		return appErrorBadRequest(err, err.Error())
 	}
 
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgCollectionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 	param, err := createQueryParams(&reqParam, tbl.Columns, tbl.Srid)
 	if err != nil {
@@ -440,7 +440,7 @@ func handleCollectionItems(w http.ResponseWriter, r *http.Request) *appError {
 func writeCreateItemSchemaJSON(ctx context.Context, w http.ResponseWriter, table *api.Table) *appError {
 	createSchema, err := getCreateItemSchema(ctx, table)
 	if err != nil {
-		return appErrorMsg(err, err.Error(), http.StatusInternalServerError)
+		return appErrorInternal(err, err.Error())
 	}
 	return writeJSON(w, api.ContentTypeSchemaJSON, createSchema)
 }
@@ -448,7 +448,7 @@ func writeCreateItemSchemaJSON(ctx context.Context, w http.ResponseWriter, table
 func writeUpdateItemSchemaJSON(ctx context.Context, w http.ResponseWriter, table *api.Table) *appError {
 	updateSchema, err := getUpdateItemSchema(ctx, table)
 	if err != nil {
-		return appErrorMsg(err, err.Error(), http.StatusInternalServerError)
+		return appErrorInternal(err, err.Error())
 	}
 	return writeJSON(w, api.ContentTypeSchemaPatchJSON, updateSchema)
 }
@@ -579,10 +579,10 @@ func writeItemsJSON(ctx context.Context, w http.ResponseWriter, name string, par
 	//--- query features data
 	features, err := catalogInstance.TableFeatures(ctx, name, param)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgDataReadError, name)
+		return appErrorInternal(err, api.ErrMsgDataReadError, name)
 	}
 	if features == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err, api.ErrMsgCollectionNotFound, name)
 	}
 
 	//--- assemble resonse
@@ -613,15 +613,15 @@ func handleItem(w http.ResponseWriter, r *http.Request) *appError {
 	fid := getRequestVar(routeVarFeatureID, r)
 	reqParam, err := parseRequestParams(r)
 	if err != nil {
-		return appErrorMsg(err, err.Error(), http.StatusBadRequest)
+		return appErrorBadRequest(err, err.Error())
 	}
 
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgCollectionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 	param, errQuery := createQueryParams(&reqParam, tbl.Columns, tbl.Srid)
 
@@ -636,7 +636,7 @@ func handleItem(w http.ResponseWriter, r *http.Request) *appError {
 			return nil
 		}
 	} else {
-		return appErrorInternalFmt(errQuery, api.ErrMsgInvalidQuery)
+		return appErrorBadRequest(errQuery, api.ErrMsgInvalidQuery)
 	}
 }
 
@@ -649,45 +649,45 @@ func handlePartialUpdateItem(w http.ResponseWriter, r *http.Request) *appError {
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorMsg(nil, "No parameter allowed", http.StatusBadRequest)
+		return appErrorBadRequest(nil, "No parameter allowed")
 	}
 
 	// check that collection exists
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgCollectionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 
 	// extract JSON from request body
 	body, errBody := ioutil.ReadAll(r.Body)
 	if errBody != nil || len(body) == 0 {
-		return appErrorInternalFmt(errBody, "Unable to read request body for Collection: %v", name)
+		return appErrorInternal(errBody, "Unable to read request body for Collection: %v", name)
 	}
 
 	// check schema
 	updateSchema, errGetSch := getUpdateItemSchema(r.Context(), tbl)
 	if errGetSch != nil {
-		return appErrorInternalFmt(errGetSch, errGetSch.Error())
+		return appErrorInternal(errGetSch, errGetSch.Error())
 	}
 	var val map[string]interface{}
 	_ = json.Unmarshal(body, &val)
 	errValSch := updateSchema.VisitJSON(val)
 	if errValSch != nil {
-		return appErrorInternalFmt(errValSch, api.ErrMsgPartialUpdateFeatureNotConform, name)
+		return appErrorBadRequest(errValSch, api.ErrMsgPartialUpdateFeatureNotConform, name)
 	}
 
 	check, errChck := tbl.CheckTableFields(val)
 	if !check && errChck != nil {
-		return appErrorInternalFmt(errChck, "validation error")
+		return appErrorBadRequest(errChck, "validation error")
 	}
 
 	// perform update in database
 	err := catalogInstance.PartialUpdateTableFeature(r.Context(), name, fid, body)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgPartialUpdateFeature, name)
+		return appErrorInternal(err, api.ErrMsgPartialUpdateFeature, name)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
@@ -704,29 +704,29 @@ func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
 	queryValues := r.URL.Query()
 	paramValues := extractSingleArgs(queryValues)
 	if len(paramValues) != 0 {
-		return appErrorMsg(nil, "No parameter allowed", http.StatusBadRequest)
+		return appErrorBadRequest(nil, "No parameter allowed")
 	}
 
 	// check that collection exists
 	tbl, err1 := catalogInstance.TableByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgCollectionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgCollectionAccess, name)
 	}
 	if tbl == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgCollectionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgCollectionNotFound, name)
 	}
 
 	// extract JSON from request body
 	body, errBody := ioutil.ReadAll(r.Body)
 	if errBody != nil || len(body) == 0 {
-		return appErrorInternalFmt(errBody, "Unable to read request body for Collection: %v", name)
+		return appErrorInternal(errBody, "Unable to read request body for Collection: %v", name)
 	}
 
 	//--- check if body matches the schema
 	// schema for replace is the same as in create http://docs.ogc.org/DRAFTS/20-002.html#feature-geojson
 	createSchema, errGetSch := getCreateItemSchema(r.Context(), tbl)
 	if errGetSch != nil {
-		return appErrorInternalFmt(errGetSch, errGetSch.Error())
+		return appErrorInternal(errGetSch, errGetSch.Error())
 	}
 	var val interface{}
 	_ = json.Unmarshal(body, &val)
@@ -738,7 +738,7 @@ func handleReplaceItem(w http.ResponseWriter, r *http.Request) *appError {
 	// perform replace in database
 	err2 := catalogInstance.ReplaceTableFeature(r.Context(), name, fid, body)
 	if err2 != nil {
-		return appErrorInternalFmt(err2, api.ErrMsgReplaceFeature, name)
+		return appErrorInternal(err2, api.ErrMsgReplaceFeature, name)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
@@ -769,10 +769,10 @@ func writeItemJSON(ctx context.Context, w http.ResponseWriter, name string, fid 
 	//--- query data for request
 	feature, err := catalogInstance.TableFeature(ctx, name, fid, param)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgDataReadError, name)
+		return appErrorInternal(err, api.ErrMsgDataReadError, name)
 	}
 	if feature == nil {
-		return appErrorNotFoundFmt(nil, api.ErrMsgFeatureNotFound, fid)
+		return appErrorNotFound(nil, api.ErrMsgFeatureNotFound, fid)
 	}
 
 	//--- assemble resonse
@@ -781,7 +781,7 @@ func writeItemJSON(ctx context.Context, w http.ResponseWriter, name string, fid 
 	//content.Links = linksItems(name, urlBase, api.FormatJSON)
 	encodedContent, err := json.Marshal(feature)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgMarshallingJSON, name, feature.ID)
+		return appErrorInternal(err, api.ErrMsgMarshallingJSON, name, feature.ID)
 	}
 
 	writeResponse(w, api.ContentTypeGeoJSON, encodedContent)
@@ -921,7 +921,7 @@ func handleFunction(w http.ResponseWriter, r *http.Request) *appError {
 
 	fn, err := catalogInstance.FunctionByName(name)
 	if fn == nil && err == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgFunctionNotFound, name)
+		return appErrorNotFound(err, api.ErrMsgFunctionNotFound, name)
 	}
 	content := fn.NewFunctionInfo()
 	isGeomFun := fn.IsGeometryFunction()
@@ -960,13 +960,13 @@ func handleFunctionItems(w http.ResponseWriter, r *http.Request) *appError {
 	name := data.FunctionQualifiedId(getRequestVar(routeVarID, r))
 	reqParam, err := parseRequestParams(r)
 	if err != nil {
-		return appErrorMsg(err, err.Error(), http.StatusBadRequest)
+		return appErrorBadRequest(err, err.Error())
 	}
 	query := api.URLQuery(r.URL)
 
 	fn, err := catalogInstance.FunctionByName(name)
 	if fn == nil && err == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgFunctionNotFound, name)
+		return appErrorNotFound(err, api.ErrMsgFunctionNotFound, name)
 	}
 	param, err := createQueryParams(&reqParam, fn.OutNames, data.SRID_4326)
 	if err != nil {
@@ -995,10 +995,10 @@ func handleFunctionItems(w http.ResponseWriter, r *http.Request) *appError {
 func writeFunItemsHTML(w http.ResponseWriter, name string, query string, urlBase string) *appError {
 	fn, err1 := catalogInstance.FunctionByName(name)
 	if err1 != nil {
-		return appErrorInternalFmt(err1, api.ErrMsgFunctionAccess, name)
+		return appErrorInternal(err1, api.ErrMsgFunctionAccess, name)
 	}
 	if fn == nil {
-		return appErrorNotFoundFmt(err1, api.ErrMsgFunctionNotFound, name)
+		return appErrorNotFound(err1, api.ErrMsgFunctionNotFound, name)
 	}
 	pathItems := api.PathFunctionItems(name)
 	// --- encoding
@@ -1021,10 +1021,10 @@ func writeFunItemsGeoJSON(ctx context.Context, w http.ResponseWriter, name strin
 	//--- query features data
 	features, err := catalogInstance.FunctionFeatures(ctx, name, args, param)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgDataReadError, name)
+		return appErrorInternal(err, api.ErrMsgDataReadError, name)
 	}
 	if features == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgNoDataRead, name)
+		return appErrorNotFound(err, api.ErrMsgNoDataRead, name)
 	}
 
 	//--- assemble resonse
@@ -1038,10 +1038,10 @@ func writeFunItemsJSON(ctx context.Context, w http.ResponseWriter, name string, 
 	//--- query features data
 	features, err := catalogInstance.FunctionData(ctx, name, args, param)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgFunctionAccess, name)
+		return appErrorInternal(err, api.ErrMsgFunctionAccess, name)
 	}
 	if features == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgNoDataRead, name)
+		return appErrorNotFound(err, api.ErrMsgNoDataRead, name)
 	}
 	return writeJSON(w, api.ContentTypeJSON, features)
 }
@@ -1050,10 +1050,10 @@ func writeFunItemsText(ctx context.Context, w http.ResponseWriter, contentType s
 	//--- query features data
 	features, err := catalogInstance.FunctionData(ctx, name, args, param)
 	if err != nil {
-		return appErrorInternalFmt(err, api.ErrMsgFunctionAccess, name)
+		return appErrorInternal(err, api.ErrMsgFunctionAccess, name)
 	}
 	if features == nil {
-		return appErrorNotFoundFmt(err, api.ErrMsgNoDataRead, name)
+		return appErrorNotFound(err, api.ErrMsgNoDataRead, name)
 	}
 	content := writeFeaturesToByte(features)
 	return writeText(w, contentType, content)
