@@ -103,11 +103,13 @@ go-test-unit:
 
   script:
     # run test:
+    - PKGS=$(go list ./... | grep -v /vendor/)
+    - DEPS=$(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
     - |
-       go test $(go list ./... | grep -v /vendor/) -v \
+       go test ${PKGS} -v \
        -coverprofile=coverage_${GO_VERSION}.out \
-       -covermode count \
-       -coverpkg $(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
+       -covermode=count \
+       -coverpkg ${DEPS}
     # generate report:
     - go run github.com/boumenot/gocover-cobertura < coverage_${GO_VERSION}.out > coverage-unit_${GO_VERSION}.xml
     # compute valid coverage total:
