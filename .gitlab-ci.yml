@@ -105,18 +105,44 @@ go-test-unit:
     # run test:
     - |
        go test $(go list ./... | grep -v /vendor/) -v \
-       -coverprofile=coverage.txt \
+       -coverprofile=coverage_${GO_VERSION}.out \
        -covermode count \
        -coverpkg $(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
     # generate report:
-    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage-unit_${GO_VERSION}.xml
+    - go run github.com/boumenot/gocover-cobertura < coverage_${GO_VERSION}.out > coverage-unit_${GO_VERSION}.xml
     # compute valid coverage total:
-    - go tool cover -func=coverage.txt
+    - go tool cover -func=coverage_${GO_VERSION}.out
 
   artifacts:
+    when: always
+    paths:
+      - coverage-unit_${GO_VERSION}.xml
+      - coverage_${GO_VERSION}.out
     reports:
       cobertura: coverage-unit_${GO_VERSION}.xml
 
+
+sonarcloud-check:
+  tags:
+    - docker
+  stage: 🤞 test
+  needs: [go-test-unit]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner
+  only:
+    - merge_requests
+    - master
+    - develop
 
 # ======================================================================================
 # -- BUILD JOBS -------------------------------------------------------------------------
