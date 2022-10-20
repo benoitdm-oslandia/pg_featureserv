@@ -1,0 +1,66 @@
+{
+    "cmd" : "benchstat",
+	"host" : "localhost",
+	"port" : 9000,
+	"reportdir" : "report",
+    "refdir" : "ref",
+    "env" : [
+        "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pg_featureserv"
+    ],
+    "benchmarks" : [
+        {
+            "name" : "BenchmarkGetCollectionItem",
+            "pkg" : "github.com/CrunchyData/pg_featureserv/internal/service/benchmarks",
+            "ref" : "BenchmarkGetCollectionItem-fake.ref",
+            "actif" : 1,
+            "env" : [
+                "PGFS_CACHE=0"
+            ]
+        },
+        {
+            "name" : "BenchmarkGetCollectionItem",
+            "pkg" : "github.com/CrunchyData/pg_featureserv/internal/service/benchmarks",
+            "ref" : "BenchmarkGetCollectionItem-fake.ref",
+            "actif" : 1,
+            "env" : [
+                "PGFS_CACHE=1"
+            ]
+        },
+        {
+            "name" : "BenchmarkGetCollectionItems",
+            "pkg" : "github.com/CrunchyData/pg_featureserv/internal/service/benchmarks",
+            "ref" : "",
+            "actif" : 1,
+            "env" : [
+                "PGFS_CACHE=0"
+            ]
+        },
+        {
+            "name" : "BenchmarkGetCollectionItems",
+            "pkg" : "github.com/CrunchyData/pg_featureserv/internal/service/benchmarks",
+            "ref" : "",
+            "actif" : 1,
+            "env" : [
+                "PGFS_CACHE=1"
+            ]
+        },
+        {
+            "name" : "BenchmarkGetCollections",
+            "pkg" : "github.com/CrunchyData/pg_featureserv/internal/service/benchmarks",
+            "ref" : "",
+            "actif" : 0,
+            "env" : [
+                "PGFS_CACHE=0"
+            ]
+        },
+        {
+            "name" : "BenchmarkGetCollections",
+            "pkg" : "github.com/CrunchyData/pg_featureserv/internal/service/benchmarks",
+            "ref" : "",
+            "actif" : 0,
+            "env" : [
+                "PGFS_CACHE=1"
+            ]
+        }
+    ]
+}

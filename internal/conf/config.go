@@ -179,4 +179,13 @@ func DumpConfig() {
 	log.Debugf("  TableIncludes = %v", Configuration.Database.TableIncludes)
 	log.Debugf("  TableExcludes = %v", Configuration.Database.TableExcludes)
 	log.Debugf("  FunctionIncludes = %v", Configuration.Database.FunctionIncludes)
+	// read all var env with prefix defined
+	// ie PGFS_CACHE
+	for _, env := range os.Environ() {
+		ok := strings.HasPrefix(env, AppConfig.EnvPrefix)
+		if ok {
+			kvp := strings.SplitN(env, "=", 2)
+			log.Debugf("  Env::%v = %v", kvp[0], kvp[1])
+		}
+	}
 }

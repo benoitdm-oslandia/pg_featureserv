@@ -1,0 +1,7 @@
+goos: linux
+goarch: amd64
+pkg: github.com/CrunchyData/pg_featureserv/internal/service/benchmarks
+cpu: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+BenchmarkGetCollectionItem-12    	    10440	    187316 ns/op	    8242 B/op	     214 allocs/op
+PASS
+ok  	github.com/CrunchyData/pg_featureserv/internal/service/benchmarks	3.108s
