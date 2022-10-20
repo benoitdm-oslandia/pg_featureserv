@@ -103,7 +103,7 @@ go-test-unit:
 
   script:
     # run test:
-    - PKGS=$(go list ./... | grep -v /vendor/)
+    - PKGS=$(go list ./... | grep -vw benchmarks | grep -v /vendor/)
     - DEPS=$(go list ./... | grep -v vendor | grep -v test | xargs | sed 's/ /,/g')
     - |
        go test ${PKGS} -v \
