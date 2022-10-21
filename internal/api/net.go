@@ -1,7 +1,7 @@
 package api
 
 /*
- Copyright 2019 Crunchy Data Solutions, Inc.
+ Copyright 2022 Crunchy Data Solutions, Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -11,6 +11,9 @@ package api
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+
+ Date     : October 2022
+ Authors  : Nicolas Revelant (nicolas dot revelant at ign dot fr)
 */
 
 import (
@@ -68,28 +71,51 @@ const (
 
 // RequestedFormat gets the format for a request from extension or headers
 func RequestedFormat(r *http.Request) string {
+	// "/collections/mock_a/items/1.dummyformat"
 	// first check explicit path
 	path := r.URL.EscapedPath()
-	if strings.HasSuffix(path, ".html") {
-		return FormatHTML
+	splittedPath := strings.Split(path, "/")
+	pathEnd := splittedPath[len(splittedPath)-1]
+	extension := ""
+	if strings.Contains(pathEnd, ".") {
+		splittedEnd := strings.Split(pathEnd, ".")
+		splitSize := len(splittedEnd)
+		if splitSize == 2 {
+			extension = splittedEnd[1]
+		}
 	}
-	if strings.HasSuffix(path, ".json") {
-		return FormatJSON
-	}
-	if strings.HasSuffix(path, ".txt") {
-		return FormatText
-	}
-	if strings.HasSuffix(path, ".svg") {
-		return FormatSVG
+	if extension != "" {
+		switch extension {
+		case ".json":
+			return FormatJSON
+		case ".html":
+			return FormatHTML
+		case ".txt":
+			return FormatText
+		case ".svg":
+			return FormatSVG
+		default:
+			return extension
+		}
 	}
 	// Use Accept header if present
-	hdrAccept := r.Header.Get("Accept")
+	hdrAcceptValue := r.Header.Get("Accept")
 	//fmt.Println("Accept:" + hdrAccept)
-	if strings.Contains(hdrAccept, ContentTypeSchemaJSON) {
-		return FormatSchemaJSON
-	}
-	if strings.Contains(hdrAccept, ContentTypeHTML) {
-		return FormatHTML
+	if hdrAcceptValue != "" {
+		switch hdrAcceptValue {
+		case ContentTypeJSON:
+			return FormatJSON
+		case ContentTypeSchemaJSON, ContentTypeSchemaPatchJSON:
+			return FormatSchemaJSON
+		case ContentTypeHTML:
+			return FormatHTML
+		case ContentTypeText:
+			return FormatText
+		case ContentTypeSVG:
+			return FormatSVG
+		default:
+			return hdrAcceptValue
+		}
 	}
 	return FormatJSON
 }

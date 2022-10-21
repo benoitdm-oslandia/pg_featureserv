@@ -46,6 +46,7 @@ func TestRunnerHandlerMock(t *testing.T) {
 		m.TestCollectionResponse()
 		m.TestCollectionsResponse()
 		m.TestFeatureNotFound()
+		m.TestFeatureFormats()
 	})
 	t.Run("GET - Params", func(t *testing.T) {
 		m := MockTests{Test: t}
