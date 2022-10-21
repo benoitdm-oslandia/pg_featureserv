@@ -42,7 +42,7 @@ release: clean docs build build-docker  ##       Generate the docs, a local buil
 test:  ##          Run the tests locally
 	go test -v $(shell go list ./... | grep -vw db_test)
 
-bench:   ##         Run the bench locally
+bench:   ##         Run the bench locally (expose DATABASE_URL)
 	go test -v $(shell go list ./... | grep benchmarks) -benchmem -bench=.
 
 install: $(PROGRAM) docs  ##       This will install the program locally
