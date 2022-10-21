@@ -25,7 +25,8 @@
             "ref" : "BenchmarkGetCollectionItem.ref",
             "actif" : 1,
             "env" : [
-                "PGFS_CACHE=1"
+                "PGFS_CACHE=1",
+                "PGFS_CACHESIZE=1000"
             ]
         },
         {
@@ -45,7 +46,8 @@
             "ref" : "BenchmarkGetCollectionItems.ref",
             "actif" : 1,
             "env" : [
-                "PGFS_CACHE=1"
+                "PGFS_CACHE=1",
+                "PGFS_CACHESIZE=1000"
             ]
         },
         {
@@ -65,7 +67,8 @@
             "ref" : "BenchmarkGetCollections.ref",
             "actif" : 1,
             "env" : [
-                "PGFS_CACHE=1"
+                "PGFS_CACHE=1",
+                "PGFS_CACHESIZE=1000"
             ]
         }
     ]
