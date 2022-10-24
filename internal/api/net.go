@@ -71,36 +71,39 @@ const (
 
 // RequestedFormat gets the format for a request from extension or headers
 func RequestedFormat(r *http.Request) string {
-	// "/collections/mock_a/items/1.dummyformat"
 	// first check explicit path
 	path := r.URL.EscapedPath()
+
+	// Accept header value
+	hdrAcceptValue := r.Header.Get("Accept")
+
+	// Extension value
 	splittedPath := strings.Split(path, "/")
 	pathEnd := splittedPath[len(splittedPath)-1]
 	extension := ""
-	if strings.Contains(pathEnd, ".") {
-		splittedEnd := strings.Split(pathEnd, ".")
-		splitSize := len(splittedEnd)
-		if splitSize == 2 {
-			extension = splittedEnd[1]
-		}
+	pos := strings.LastIndex(pathEnd, ".")
+	if pos != -1 {
+		extension = pathEnd[pos+1:]
 	}
-	if extension != "" {
+
+	// TODO: case when extension and header Accept are provided at the same time
+	// -> Bad Request ?
+
+	if extension != "" && hdrAcceptValue == "" {
 		switch extension {
-		case ".json":
+		case "json":
 			return FormatJSON
-		case ".html":
+		case "html":
 			return FormatHTML
-		case ".txt":
+		case "txt":
 			return FormatText
-		case ".svg":
+		case "svg":
 			return FormatSVG
 		default:
 			return extension
 		}
 	}
-	// Use Accept header if present
-	hdrAcceptValue := r.Header.Get("Accept")
-	//fmt.Println("Accept:" + hdrAccept)
+
 	if hdrAcceptValue != "" {
 		switch hdrAcceptValue {
 		case ContentTypeJSON:
