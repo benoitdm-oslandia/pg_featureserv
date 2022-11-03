@@ -38,19 +38,25 @@ var hTest util.HttpTesting
 var db *pgxpool.Pool
 var cat data.Catalog
 
-// ...
+// base struct for all test
 type DbTests struct {
 	Test *testing.T
 }
 
-// ...
+// Test entrypoint
 func TestMain(m *testing.M) {
+	// log.SetLevel(logrus.DebugLevel)
+	// log.SetFormatter(&log.TextFormatter{
+	// 	ForceColors:               true,
+	// 	DisableColors:             false,
+	// 	EnvironmentOverrideColors: true,
+	// 	TimestampFormat:           "2006-01-02 15:04:05",
+	// })
 
 	conf.InitConfig("", false) // getting default configuration
 
 	log.Debug("init : Db/Service")
 	db = util.CreateTestDb()
-	// defer util.CloseTestDb(db)
 
 	cat = data.CatDBInstance()
 
@@ -62,7 +68,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// ...
+// Describes all test groups
 func TestRunnerHandlerDb(t *testing.T) {
 	// initialisation avant l'execution des tests
 	beforeRun()
