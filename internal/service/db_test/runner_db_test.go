@@ -142,6 +142,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		cat.Initialize(nil, nil)
 		test.TestCacheSizeIncreaseAfterCreate()
 		test.TestCacheSizeDecreaseAfterDelete()
+		test.TestCacheModifiedAfterUpdate()
 		afterEachRun()
 	})
 
