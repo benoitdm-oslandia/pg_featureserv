@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/CrunchyData/pg_featureserv/internal/data"
-	"github.com/CrunchyData/pg_featureserv/internal/util"
+	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
 )
 
 func (t *DbTests) TestCacheSizeIncreaseAfterCreate() {
