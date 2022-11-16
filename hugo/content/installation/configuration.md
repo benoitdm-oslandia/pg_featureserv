@@ -53,6 +53,13 @@ export PGFS_SERVER_HTTPPORT=8889
 export PGFS_METADATA_TITLE="My PGFS"
 ```
 
+Or to change cache configuration to use a Redis server :
+
+```bash
+export PGFS_CACHE_TYPE="Redis"
+export PGFS_CACHE_REDIS_URL="localhost:6379"
+```
+
 ### Example Configuration
 
 An example configuration file is shown below.
@@ -135,6 +142,17 @@ LimitMax = 10000
 [Website]
 # URL for the map view basemap
 BasemapUrl = "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
+
+[Cache]
+# Type of cache, choose between Disabled / Naive / Redis
+Type = "Naive"
+
+[Cache.Naive]
+MapSize = 400000
+
+[Cache.Redis]
+Url= "localhost:6379"
+Password = "yourpassword"
 ```
 
 ### Configuration options
@@ -283,3 +301,20 @@ Appears in the HTML web pages and JSON responses.
 
 The URL template for the basemap used in the web UI map views.
 Must be a URL template suitable for the OpenLayers OSM class.
+
+#### Cache
+
+```toml
+[Cache]
+# Type of cache, choose between Disabled / Naive / Redis
+Type = "Naive"
+
+[Cache.Naive]
+MapSize = 400000
+
+[Cache.Redis]
+Url= "localhost:6379"
+Password = "yourpassword"
+```
+
+If `Type` is not set, no cache will be used by `pg_featureserv`. If an invalid value is used, the program is not started.
