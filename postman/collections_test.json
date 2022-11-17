@@ -1,0 +1,1917 @@
+{
+	"info": {
+		"_postman_id": "06b9eaad-400a-4974-80e9-e5a0fe740358",
+		"name": "pg-featureserv",
+		"description": "Crunchy Data Feature Server for PostGIS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24416812"
+	},
+	"item": [
+		{
+			"name": "collections",
+			"item": [
+				{
+					"name": "{collection Id}",
+					"item": [
+						{
+							"name": "items",
+							"item": [
+								{
+									"name": "{feature Id}",
+									"item": [
+										{
+											"name": "delete Collection Feature",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"// TEST SUCCESS 204",
+															"const body =  pm.response;",
+															"pm.test(\"Status code is 204\", function () {",
+															"  pm.response.to.have.status(204);",
+															"});",
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "DELETE",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/{{newCollectionId}}",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														"{{collectionId}}",
+														"items",
+														"{{newCollectionId}}"
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "No Content : feature updated",
+													"originalRequest": {
+														"method": "DELETE",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "No Content",
+													"code": 204,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Malformed feature ID or unsuitable query parameters",
+													"originalRequest": {
+														"method": "DELETE",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Resource not found",
+													"originalRequest": {
+														"method": "DELETE",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										},
+										{
+											"name": "get Collection Feature",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"// TEST SUCCESS 200",
+															"const body =  pm.response.json();",
+															"pm.test(\"Status code is 200\", function () {",
+															"  pm.response.to.have.status(200);",
+															"});",
+															"",
+															"//TESTS RESPONSES",
+															"var body_properties=['type','id','geometry','properties']",
+															"",
+															"    // test body properties",
+															"    for (var i = 0; i < body_properties.length; i++){",
+															"    pm.expect(body).to.have.property(body_properties[i])",
+															"    }",
+															"",
+															"    // test body.geometry features",
+															"    var geometryArray=['type','coordinates']",
+															"    for (var j = 0; j < geometryArray.length; j++){",
+															"    pm.expect(body.geometry).to.have.property(geometryArray[j])",
+															"    }",
+															"",
+															"    // test body.properties features",
+															"    var propertiesArray=['prop_b','prop_d','prop_f','prop_i','prop_j','prop_l','prop_r','prop_t']",
+															"    for (var k = 0; k < propertiesArray.length; k++){",
+															"    pm.expect(body.properties).to.have.property(propertiesArray[k])",
+															"    }",
+															"    // test headers",
+															"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/geo+json\")"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/241",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														"{{collectionId}}",
+														"items",
+														"241"
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "GeoJSON Feature document containing feature data",
+													"originalRequest": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"query": [
+																{
+																	"key": "properties",
+																	"value": "a,b,c"
+																},
+																{
+																	"key": "transform",
+																	"value": "Centroid|Buffer|1"
+																},
+																{
+																	"key": "crs",
+																	"value": "4326"
+																}
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										},
+										{
+											"name": "update Collection Feature",
+											"request": {
+												"method": "PATCH",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														":collectionId",
+														"items",
+														":featureId"
+													],
+													"variable": [
+														{
+															"key": "collectionId",
+															"value": "commodo labore anim",
+															"description": "(Required) ID of collection."
+														},
+														{
+															"key": "featureId",
+															"value": "commodo labore anim",
+															"description": "(Required) Id of feature in collection to retrieve data for."
+														}
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "No Content : feature updated",
+													"originalRequest": {
+														"method": "PATCH",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "No Content",
+													"code": 204,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Resource not found",
+													"originalRequest": {
+														"method": "PATCH",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										},
+										{
+											"name": "replace Collection Feature",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														":collectionId",
+														"items",
+														":featureId"
+													],
+													"query": [
+														{
+															"key": "properties",
+															"value": "a,b,c",
+															"description": "List of properties to return in response objects"
+														},
+														{
+															"key": "transform",
+															"value": "Centroid|Buffer|1",
+															"description": "Geometry transformation function pipeline to apply"
+														},
+														{
+															"key": "crs",
+															"value": "4326",
+															"description": "SRID for coordinate reference system of output features."
+														}
+													],
+													"variable": [
+														{
+															"key": "collectionId",
+															"value": "commodo labore anim",
+															"description": "(Required) ID of collection."
+														},
+														{
+															"key": "featureId",
+															"value": "commodo labore anim",
+															"description": "(Required) Id of feature in collection to retrieve data for."
+														}
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "No Content : feature updated",
+													"originalRequest": {
+														"method": "PUT",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"query": [
+																{
+																	"key": "properties",
+																	"value": "a,b,c"
+																},
+																{
+																	"key": "transform",
+																	"value": "Centroid|Buffer|1"
+																},
+																{
+																	"key": "crs",
+																	"value": "4326"
+																}
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "No Content",
+													"code": 204,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Malformed feature ID or unsuitable query parameters",
+													"originalRequest": {
+														"method": "PUT",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"query": [
+																{
+																	"key": "properties",
+																	"value": "a,b,c"
+																},
+																{
+																	"key": "transform",
+																	"value": "Centroid|Buffer|1"
+																},
+																{
+																	"key": "crs",
+																	"value": "4326"
+																}
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Resource not found",
+													"originalRequest": {
+														"method": "PUT",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"query": [
+																{
+																	"key": "properties",
+																	"value": "a,b,c"
+																},
+																{
+																	"key": "transform",
+																	"value": "Centroid|Buffer|1"
+																},
+																{
+																	"key": "crs",
+																	"value": "4326"
+																}
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "get Collection Features",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"// TEST SUCCESS 200",
+													"const body =  pm.response.json();",
+													"console.log(body)",
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"//TESTS RESPONSES",
+													"var body_properties=['type','features','numberReturned','timeStamp','links']",
+													"",
+													"    // test body properties",
+													"    for (var i = 0; i < body_properties.length; i++){",
+													"    pm.expect(body).to.have.property(body_properties[i])",
+													"    }",
+													"",
+													"    // test body.features ",
+													"",
+													"    var featuresArray =['type','id','geometry','properties']",
+													"    for (var k=0 ;k< body.features.length;k++){",
+													"        for (var l=0;l<featuresArray.length;l++){",
+													"            pm.expect(body.features[k]).to.have.property(featuresArray[l])",
+													"        }",
+													"    }",
+													"",
+													"",
+													"    // test length of body.features and body.numberReturned",
+													"",
+													"    var len_features = Object.keys(body.features).length;",
+													"    pm.expect(len_features).to.equal(body.numberReturned)",
+													"",
+													"    // test length of body.links ",
+													"",
+													"    pm.expect(body.links.length).to.equal(2)",
+													"",
+													"    //test headers",
+													"",
+													"    //pm.expect(responseHeaders['transfer-encoding']).to.equal(\"chunked\")",
+													"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/geo+json\")",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/collections/{{collectionId}}/items",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"collections",
+												"{{collectionId}}",
+												"items"
+											],
+											"query": [
+												{
+													"key": "transform",
+													"value": "",
+													"description": "Geometry transformation function pipeline to apply",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "GeoJSON Feature Collection document containing data for features",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/collections/:collectionId/items?bbox=-120,30,-100,49&bbox-crs=4326&filter=commodo labore anim&filter-crs=4326&transform=Centroid|Buffer|1&properties=a,b,c&sortby=commodo labore anim&crs=4326&limit=10&offset=0",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														":collectionId",
+														"items"
+													],
+													"query": [
+														{
+															"key": "bbox",
+															"value": "-120,30,-100,49"
+														},
+														{
+															"key": "bbox-crs",
+															"value": "4326"
+														},
+														{
+															"key": "filter",
+															"value": "commodo labore anim"
+														},
+														{
+															"key": "filter-crs",
+															"value": "4326"
+														},
+														{
+															"key": "transform",
+															"value": "Centroid|Buffer|1"
+														},
+														{
+															"key": "properties",
+															"value": "a,b,c"
+														},
+														{
+															"key": "sortby",
+															"value": "commodo labore anim"
+														},
+														{
+															"key": "crs",
+															"value": "4326"
+														},
+														{
+															"key": "limit",
+															"value": "10"
+														},
+														{
+															"key": "offset",
+															"value": "0"
+														}
+													],
+													"variable": [
+														{
+															"key": "collectionId",
+															"value": "commodo labore anim",
+															"description": "(Required) ID of collection."
+														}
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "text",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "text/plain"
+												}
+											],
+											"cookie": [],
+											"body": ""
+										}
+									]
+								},
+								{
+									"name": "create Collection Feature",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"// TEST SUCCESS 201",
+													"const body =  pm.response;",
+													"pm.test(\"Status code is 201\", function () {",
+													"  pm.response.to.have.status(201);",
+													"});",
+													"console.log(responseHeaders[\"Location\"]);",
+													"",
+													"\t// test headers",
+													"",
+													"    function validURL(str) {",
+													"    var pattern = new RegExp('^(https?:\\\\/\\\\/)?'+ // protocol",
+													"        '((([a-z\\\\d]([a-z\\\\d-]*[a-z\\\\d])*)\\\\.)+[a-z]{2,}|'+ // domain name",
+													"        '((\\\\d{1,3}\\\\.){3}\\\\d{1,3}))'+ // OR ip (v4) address",
+													"        '(\\\\:\\\\d+)?(\\\\/[-a-z\\\\d%_.~+]*)*'+ // port and path",
+													"        '(\\\\?[;&a-z\\\\d%_.~+=-]*)?'+ // query string",
+													"        '(\\\\#[-a-z\\\\d_]*)?$','i'); // fragment locator",
+													"    return !!pattern.test(str);",
+													"    }",
+													"",
+													"",
+													"    // save new id for delete test",
+													"    pm.expect(validURL(responseHeaders[\"Location\"]))",
+													"    console.log(validURL(responseHeaders[\"Location\"]))",
+													"    var result =responseHeaders[\"Location\"].split(\"/\")",
+													"    let val =result[result.length-1]",
+													"    var value=pm.collectionVariables.set(\"newCollectionId\",val);",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": [false],\n\t\t\"prop_c\": \"propC\",\n\t\t\"prop_d\": \"2022-10-25T00:00:00Z\",\n\t\t\"prop_f\": 47.807897059236495,\n\t\t\"prop_i\": 4,\n\t\t\"prop_j\": {},\n\t\t\"prop_l\": 48,\n\t\t\"prop_r\": 5,\n\t\t\"prop_t\": \"prop_t\"\n  },\n  \"type\": \"Feature\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/collections/{{collectionId}}/items",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"collections",
+												"{{collectionId}}",
+												"items"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "Empty body with location header",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/collections/:collectionId/items",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														":collectionId",
+														"items"
+													],
+													"variable": [
+														{
+															"key": "collectionId",
+															"value": "commodo labore anim",
+															"description": "(Required) ID of collection."
+														}
+													]
+												}
+											},
+											"status": "Created",
+											"code": 201,
+											"_postman_previewlanguage": "text",
+											"header": [
+												{
+													"key": "location",
+													"value": "commodo labore anim",
+													"description": "Contains a link to access to the new feature data"
+												},
+												{
+													"key": "Content-Type",
+													"value": "text/plain"
+												}
+											],
+											"cookie": [],
+											"body": ""
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "get Collection Meta Data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// TEST SUCCESS 200",
+											"const body =  pm.response.json();",
+											"console.log(body)",
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"",
+											"//TESTS RESPONSES",
+											"",
+											"    // test body titles",
+											"    var body_titles=['id','title','description','extent','geometrytype','properties','links']",
+											"    ",
+											"    for (var i = 0; i < body_titles.length; i++){",
+											"    pm.expect(body).to.have.property(body_titles[i])",
+											"    }",
+											"",
+											"    // test body.extent.spatial feature",
+											"    pm.expect(body.extent.spatial).to.have.property('bbox')",
+											"",
+											"    // test length of body.properties ",
+											"    var propertiesArray = body.properties",
+											"    pm.expect(propertiesArray.length).to.equal(9)",
+											"",
+											"    // test body.properties features",
+											"    var properties_features= ['name','type','description']",
+											"    for (var k = 0; k < propertiesArray.length; k++) {",
+											"        for (var l=0; l<properties_features.length; l++){",
+											"    pm.expect(propertiesArray[k]).to.have.property(properties_features[l])",
+											"    }",
+											"    }",
+											"",
+											"    // test length of body.links",
+											"",
+											"    var linksArray = body.links",
+											"    pm.expect(linksArray.length).to.equal(3)",
+											"",
+											"    // test headers",
+											"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/collections/{{collectionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"collections",
+										"{{collectionId}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Results for details about the specified feature collection",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/collections/:collectionId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"collections",
+												":collectionId"
+											],
+											"variable": [
+												{
+													"key": "collectionId",
+													"value": "commodo labore anim",
+													"description": "(Required) ID of collection."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"id\": \"\",\n  \"links\": [\n    {\n      \"href\": \"culpa proident est \",\n      \"hreflang\": \"ex amet est adipisicing\",\n      \"rel\": \"dolore culpa magna labore\",\n      \"title\": \"sunt officia voluptate in\",\n      \"type\": \"incididunt ea adipisicing non ut\"\n    },\n    {\n      \"href\": \"qui Duis nulla dolore\",\n      \"hreflang\": \"ad sint exercitation voluptate incididunt\",\n      \"rel\": \"consectetur exercitation sint\",\n      \"title\": \"qui officia eiusmod sit\",\n      \"type\": \"et fugiat irure officia\"\n    }\n  ],\n  \"crs\": [\n    \"anim nulla commodo\",\n    \"eu amet commodo nostrud\"\n  ],\n  \"description\": \"Excep\",\n  \"extent\": {\n    \"spatial\": {\n      \"bbox\": [\n        173.3834386518655,\n        156.996244652421,\n        -110.80951305844304,\n        -36.76250719602757\n      ],\n      \"crs\": \"dolore sed Lorem\"\n    }\n  },\n  \"geometrytype\": \"Lorem aliquip\",\n  \"properties\": [\n    {\n      \"name\": \"eiusmod sit quis dolore\",\n      \"type\": \"qui sed sit mollit\",\n      \"description\": \"elit\"\n    },\n    {\n      \"name\": \"laborum\",\n      \"type\": \"aliquip\",\n      \"description\": \"mollit sint in\"\n    }\n  ],\n  \"title\": \"occaecat laboris elit est\"\n}"
+								}
+							]
+						},
+						{
+							"name": "get Collection Schema",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											" // TEST SUCCESS 200",
+											"// TEST SUCCESS 200",
+											"const body =  pm.response.json();",
+											"console.log(body)",
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"",
+											"//TESTS RESPONSES",
+											"console.log(body)",
+											"var body_properties=['type','description','required','properties']",
+											"",
+											"    // test body properties ",
+											"    for (var i = 0; i < body_properties.length; i++){",
+											"    pm.expect(body).to.have.property(body_properties[i])",
+											"    }",
+											"",
+											"    var propertiesArray=['geometry','id','properties','type']",
+											"    var requiredArray=['type','geometry','properties']",
+											"",
+											"    ",
+											"    // test body.properties features ",
+											"",
+											"    for (var j = 0; j < propertiesArray.length; j++){",
+											"        pm.expect(body.properties).to.have.property(propertiesArray[j])",
+											"    }",
+											"",
+											"    // test body.required features ",
+											"",
+											"    for (var k = 0; k < body.required.length; k++){",
+											"            console.log(requiredArray[k])",
+											"    pm.expect(body.required[k]).is.equal(requiredArray[k])",
+											"        }",
+											"",
+											"    // test headers",
+											"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/schema+json\")"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/schema+json",
+										"description": "application/schema+json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/collections/{{collectionId}}/schema?type=create",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"collections",
+										"{{collectionId}}",
+										"schema"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "create"
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "GeoJSON Feature Collection document containing data schema for specific type",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/collections/:collectionId/schema?type=commodo labore anim",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"collections",
+												":collectionId",
+												"schema"
+											],
+											"query": [
+												{
+													"key": "type",
+													"value": "commodo labore anim"
+												}
+											],
+											"variable": [
+												{
+													"key": "collectionId",
+													"value": "commodo labore anim",
+													"description": "(Required) ID of collection."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "text",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "text/plain"
+										}
+									],
+									"cookie": [],
+									"body": ""
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "get Collections Meta Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// TEST SUCCESS 200",
+									"const body =  pm.response.json();",
+									"console.log(body)",
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"//TESTS RESPONSES",
+									"var data_titles=['links','collections']",
+									"",
+									"    // test body titles",
+									"    for (var i = 0; i < data_titles.length; i++){",
+									"    pm.expect(body).to.have.property(data_titles[i])",
+									"    }",
+									"    //test body.collections titles",
+									"    var collections_titles=['id','title','description','extent','links']",
+									"    for (var k = 0; k < body.collections.length; k++){",
+									"        for (var l = 0; l < collections_titles.length; l++){",
+									"            pm.expect(body.collections[k]).to.have.property(collections_titles[l])\t",
+									"        }",
+									"    }",
+									"    //test length of body.links ",
+									"    var linksArray = body.links",
+									"    pm.expect(linksArray.length).to.equal(2)",
+									"",
+									"    // test body.links titles",
+									"",
+									"    var links_titles=['href','rel','type','title']",
+									"    for (var m = 0; m < body.links; m++) {",
+									"        for (var n = 0; n < linksArray.length; n++) {",
+									"            pm.expect(body.links_titles[m]).to.have.property(links_titles[n])",
+									"        }",
+									"    }",
+									"",
+									"    // test headers",
+									"    console.log(responseHeaders)",
+									"    //pm.expect(responseHeaders['Transfer-Encoding']).to.equal(\"chunked\")",
+									"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/collections",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"collections"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Results for details about the specified feature collection",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/collections",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"collections"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"links\": [\n    {\n      \"href\": \"enim cupidatat\",\n      \"hreflang\": \"qui\",\n      \"rel\": \"id anim\",\n      \"title\": \"fugiat sint do ve\",\n      \"type\": \"reprehenderit in\"\n    },\n    {\n      \"href\": \"reprehenderit in\",\n      \"hreflang\": \"consectetur\",\n      \"rel\": \"Ut pariatur cillum\",\n      \"title\": \"fugiat\",\n      \"type\": \"cupidatat consectetur mollit\"\n    }\n  ],\n  \"collections\": [\n    {\n      \"id\": \"ut nulla\",\n      \"links\": [\n        {\n          \"href\": \"aliquip aliqua\",\n          \"hreflang\": \"quis in commodo conse\",\n          \"rel\": \"magna dolore\",\n          \"title\": \"in reprehenderit\",\n          \"type\": \"ut adipisicing magna consectetur eiusmod\"\n        },\n        {\n          \"href\": \"adipisicing aliqua\",\n          \"hreflang\": \"fugiat sunt ea\",\n          \"rel\": \"nulla exercitation anim cillum\",\n          \"title\": \"in irure amet\",\n          \"type\": \"fugiat commodo dolore sit\"\n        }\n      ],\n      \"crs\": [\n        \"cillum dolore\",\n        \"adipisicing ut consequat in\"\n      ],\n      \"description\": \"commodo dolor\",\n      \"extent\": {\n        \"spatial\": {\n          \"bbox\": [\n            -150.91004880377085,\n            -38.52219927474846,\n            -40.43886301498651,\n            131.62753892308876\n          ],\n          \"crs\": \"non dolor nisi\"\n        }\n      },\n      \"geometrytype\": \"ea cillum consectetur irure\",\n      \"properties\": [\n        {\n          \"name\": \"quis aliquip\",\n          \"type\": \"magna ad Ut\",\n          \"description\": \"fugiat veniam adipisicing\"\n        },\n        {\n          \"name\": \"nisi fugiat velit ex amet\",\n          \"type\": \"officia ut ullamco dolor elit\",\n          \"description\": \"in no\"\n        }\n      ],\n      \"title\": \"ut\"\n    },\n    {\n      \"id\": \"ea qui\",\n      \"links\": [\n        {\n          \"href\": \"amet\",\n          \"hreflang\": \"sunt aute occaecat nulla\",\n          \"rel\": \"elit eiusmod ad deserunt\",\n          \"title\": \"eu Lor\",\n          \"type\": \"in proident dolore\"\n        },\n        {\n          \"href\": \"Duis sunt sint Excepteur amet\",\n          \"hreflang\": \"consequat ut\",\n          \"rel\": \"labore veniam\",\n          \"title\": \"ut\",\n          \"type\": \"ipsum magna reprehenderit l\"\n        }\n      ],\n      \"crs\": [\n        \"eiusmod\",\n        \"fugiat commodo veniam sit\"\n      ],\n      \"description\": \"nulla mollit nisi amet\",\n      \"extent\": {\n        \"spatial\": {\n          \"bbox\": [\n            171.9390882927629,\n            23.682352714510074,\n            -134.96250096060953,\n            24.473188744226775\n          ],\n          \"crs\": \"in est eiusmod\"\n        }\n      },\n      \"geometrytype\": \"aliquip sint\",\n      \"properties\": [\n        {\n          \"name\": \"et\",\n          \"type\": \"nisi sunt cillum\",\n          \"description\": \"officia in\"\n        },\n        {\n          \"name\": \"occaecat sed\",\n          \"type\": \"sunt dolore ut\",\n          \"description\": \"ad anim non\"\n        }\n      ],\n      \"title\": \"in ad venia\"\n    }\n  ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "functions",
+			"item": [
+				{
+					"name": "{function Id}",
+					"item": [
+						{
+							"name": "get Function Meta Data",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/functions/{{functionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"functions",
+										"{{functionId}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Results for details about the specified function",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/functions/:functionId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"functions",
+												":functionId"
+											],
+											"variable": [
+												{
+													"key": "functionId",
+													"value": "commodo labore anim",
+													"description": "(Required) ID of function."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"id\": \"magna Duis velit\",\n  \"links\": [\n    {\n      \"href\": \"est in elit\",\n      \"hreflang\": \"aliquip ipsum in culpa\",\n      \"rel\": \"nulla et ut\",\n      \"title\": \"consectetur pariatu\",\n      \"type\": \"ut qui laborum elit in\"\n    },\n    {\n      \"href\": \"mollit incidid\",\n      \"hreflang\": \"consectetur sunt\",\n      \"rel\": \"pariatur labore aute\",\n      \"title\": \"aliqua deserunt dolor et\",\n      \"type\": \"dolore cupidatat\"\n    }\n  ],\n  \"description\": \"irure nostrud nisi\",\n  \"parameters\": [\n    {\n      \"name\": \"pariatur in ex ut Duis\",\n      \"type\": \"sed nulla aliquip\",\n      \"default\": \"in ullamco Duis officia\"\n    },\n    {\n      \"name\": \"non dolor pariatur dolore\",\n      \"type\": \"sed officia\",\n      \"default\": \"consequat qui\"\n    }\n  ],\n  \"properties\": [\n    {\n      \"name\": \"officia ad Lorem\",\n      \"type\": \"velit consequat do enim ut\",\n      \"description\": \"laboris in\"\n    },\n    {\n      \"name\": \"qui ut\",\n      \"type\": \"voluptate cillum aliqua\",\n      \"description\": \"sed magna adip\"\n    }\n  ]\n}"
+								}
+							]
+						},
+						{
+							"name": "get Function Features",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/functions/:functionId/items?bbox=-120,30,-100,49&bbox-crs=4326&filter=commodo labore anim&filter-crs=4326&transform=Centroid|Buffer|1&properties=a,b,c&sortby=commodo labore anim&crs=4326&limit=10&offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"functions",
+										":functionId",
+										"items"
+									],
+									"query": [
+										{
+											"key": "bbox",
+											"value": "-120,30,-100,49",
+											"description": "Bounding box to restrict results to given extent (as minLon,minLat,maxLon,maxLat)."
+										},
+										{
+											"key": "bbox-crs",
+											"value": "4326",
+											"description": "SRID for coordinate reference system of bbox parameter."
+										},
+										{
+											"key": "filter",
+											"value": "commodo labore anim",
+											"description": "CQL filter to apply."
+										},
+										{
+											"key": "filter-crs",
+											"value": "4326",
+											"description": "SRID for filter geometry literals."
+										},
+										{
+											"key": "transform",
+											"value": "Centroid|Buffer|1",
+											"description": "Geometry transformation function pipeline to apply"
+										},
+										{
+											"key": "properties",
+											"value": "a,b,c",
+											"description": "List of properties to return in response objects"
+										},
+										{
+											"key": "sortby",
+											"value": "commodo labore anim",
+											"description": "Column to sort by."
+										},
+										{
+											"key": "crs",
+											"value": "4326",
+											"description": "SRID for coordinate reference system of output features."
+										},
+										{
+											"key": "limit",
+											"value": "10",
+											"description": "Maximum number of results to return."
+										},
+										{
+											"key": "offset",
+											"value": "0",
+											"description": "Offset of start of returned results."
+										}
+									],
+									"variable": [
+										{
+											"key": "functionId",
+											"value": "commodo labore anim",
+											"description": "(Required) ID of function."
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "GeoJSON or JSON document containing function results",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/functions/:functionId/items?bbox=-120,30,-100,49&bbox-crs=4326&filter=commodo labore anim&filter-crs=4326&transform=Centroid|Buffer|1&properties=a,b,c&sortby=commodo labore anim&crs=4326&limit=10&offset=0",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"functions",
+												":functionId",
+												"items"
+											],
+											"query": [
+												{
+													"key": "bbox",
+													"value": "-120,30,-100,49"
+												},
+												{
+													"key": "bbox-crs",
+													"value": "4326"
+												},
+												{
+													"key": "filter",
+													"value": "commodo labore anim"
+												},
+												{
+													"key": "filter-crs",
+													"value": "4326"
+												},
+												{
+													"key": "transform",
+													"value": "Centroid|Buffer|1"
+												},
+												{
+													"key": "properties",
+													"value": "a,b,c"
+												},
+												{
+													"key": "sortby",
+													"value": "commodo labore anim"
+												},
+												{
+													"key": "crs",
+													"value": "4326"
+												},
+												{
+													"key": "limit",
+													"value": "10"
+												},
+												{
+													"key": "offset",
+													"value": "0"
+												}
+											],
+											"variable": [
+												{
+													"key": "functionId",
+													"value": "commodo labore anim",
+													"description": "(Required) ID of function."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "text",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "text/plain"
+										}
+									],
+									"cookie": [],
+									"body": ""
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "get Functions Functions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// TEST SUCCESS 200",
+									"const body =  pm.response.json();",
+									"console.log(body)",
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"//TESTS RESPONSES",
+									"",
+									"var body_properties=['links','functions']",
+									"",
+									"    // test body properties ",
+									"    for (var i = 0; i < body_properties.length; i++){",
+									"    pm.expect(body).to.have.property(body_properties[i])",
+									"    }",
+									"",
+									"    // test length of body.links ",
+									"",
+									"    pm.expect(body.links.length).to.equal(2)",
+									"",
+									"    // test body.links features",
+									"    var links_features=['href','rel','type','title']",
+									"    for (var j = 0; j < body.links.length; j++){",
+									"        for (var l = 0; l < links_features.length; l++){",
+									"    pm.expect(body.links[j]).to.have.property(links_features[l])",
+									"    }}",
+									"",
+									"    // test headers",
+									"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/functions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"functions"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Results for details about functions served",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/functions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"functions"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"links\": [\n    {\n      \"href\": \"qui Excepteur\",\n      \"hreflang\": \"et cillum sit\",\n      \"rel\": \"voluptate \",\n      \"title\": \"anim proident mollit occaecat\",\n      \"type\": \"nostrud dolor dolor adipisicing\"\n    },\n    {\n      \"href\": \"consequat aute sit occaecat\",\n      \"hreflang\": \"amet\",\n      \"rel\": \"proident\",\n      \"title\": \"ut ad\",\n      \"type\": \"dolore adipisicing\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"id\": \"anim magna elit nostrud\",\n      \"links\": [\n        {\n          \"href\": \"cillum esse\",\n          \"hreflang\": \"dolor cu\",\n          \"rel\": \"esse fugiat adipisicing\",\n          \"title\": \"magna minim Excepteur aute\",\n          \"type\": \"quis deserunt ut\"\n        },\n        {\n          \"href\": \"mollit non tempor nisi\",\n          \"hreflang\": \"proident do sunt\",\n          \"rel\": \"eiusmod\",\n          \"title\": \"Duis Ut proident\",\n          \"type\": \"aliquip ut\"\n        }\n      ],\n      \"description\": \"et\"\n    },\n    {\n      \"id\": \"deseru\",\n      \"links\": [\n        {\n          \"href\": \"mollit in ad anim\",\n          \"hreflang\": \"occaecat aliqua dolor cillum\",\n          \"rel\": \"Ut aliqua\",\n          \"title\": \"d\",\n          \"type\": \"voluptate incididunt dolor\"\n        },\n        {\n          \"href\": \"sunt voluptate cupidatat et consequat\",\n          \"hreflang\": \"occaecat dolor\",\n          \"rel\": \"in pariatur id\",\n          \"title\": \"in commodo dolore culpa\",\n          \"type\": \"dolore laborum ipsum\"\n        }\n      ],\n      \"description\": \"deserunt ad id\"\n    }\n  ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "get Root",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TEST SUCCESS 200",
+							"const body =  pm.response.json();",
+							"pm.test(\"Status code is 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"    // TESTS RESPONSES :",
+							"",
+							"    var linksArray = body.links",
+							"",
+							"\t// test length of body.links",
+							"\tpm.expect(linksArray.length).to.equal(6)",
+							"",
+							"\t// test the properties.links features",
+							"\tvar links_features=['href','rel','type','title']",
+							"    for (var k = 0; k < linksArray.length; k++) {",
+							"        for (var l=0; l<links_features.length; l++){",
+							"            pm.expect(linksArray[k]).to.have.property(links_features[l])",
+							"    }}",
+							"",
+							"    // test urls path ",
+							"    var links_url=['index','index.html','api','conformance','collections','functions']",
+							"    for (var m = 0; m <links_url.length; m++) {",
+							"        var url=String(pm.collectionVariables.get(\"baseUrl\")+\"/\"+links_url[m]);",
+							"        pm.expect(linksArray[m].href).to.equal(url);",
+							"    }",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Results for root of API",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"links\": [\n    {\n      \"href\": \"enim do officia adipisicing quis\",\n      \"hreflang\": \"proident dolor occaecat cillum\",\n      \"rel\": \"dolor sint voluptate elit quis\",\n      \"title\": \"dolore quis ipsum\",\n      \"type\": \"fugiat aliqua ipsum labore irure\"\n    },\n    {\n      \"href\": \"aliquip quis dolore\",\n      \"hreflang\": \"officia consectetur exercitation\",\n      \"rel\": \"velit dolore nisi voluptate reprehenderit\",\n      \"title\": \"ullamco ut incididunt\",\n      \"type\": \"dolor consequat cillum dolore\"\n    }\n  ],\n  \"description\": \"culpa qui mollit\",\n  \"title\": \"anim\"\n}"
+				}
+			]
+		},
+		{
+			"name": "get API",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TEST SUCCESS 200",
+							"const body =  pm.response.json();",
+							"pm.test(\"Status code is 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// TESTS RESPONSES",
+							"    var data_titles=['components','info','openapi','paths','servers']",
+							"",
+							"    // test body titles",
+							"    for (var i = 0; i < data_titles.length; i++){",
+							"    pm.expect(body).to.have.property(data_titles[i])",
+							"    }",
+							"",
+							"    //test body.infos titles",
+							"    var infos_titles=['description','license','title','version']",
+							"    for (var j = 0 ; j <  infos_titles.length; j++){",
+							"        console.log(infos_titles[j])",
+							"        pm.expect(body.info).to.have.property(infos_titles[j])",
+							"    }",
+							"",
+							"    // test length of body.paths ",
+							"    var len_paths = Object.keys(body.paths).length;",
+							"    pm.expect(len_paths).to.equal(11)",
+							"",
+							"    // test headers",
+							"    pm.expect(responseHeaders['Transfer-Encoding']).to.equal(\"chunked\")",
+							"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "openapi content",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "text/plain"
+						}
+					],
+					"cookie": [],
+					"body": ""
+				}
+			]
+		},
+		{
+			"name": "get Conformance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TEST SUCCESS 200",
+							"const body =  pm.response.json();",
+							"console.log(body)",
+							"pm.test(\"Status code is 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/conformance",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"conformance"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Results for conformance classes",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/conformance",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"conformance"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"conformsTo\": [\n    \"deserunt \",\n    \"amet cillum\"\n  ]\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://0.0.0.0:9000",
+			"type": "string"
+		},
+		{
+			"key": "collectionId",
+			"value": "public.mock_multi",
+			"type": "string"
+		},
+		{
+			"key": "featureId",
+			"value": "219",
+			"type": "string"
+		},
+		{
+			"key": "newCollectionId",
+			"value": ""
+		}
+	]
+}
