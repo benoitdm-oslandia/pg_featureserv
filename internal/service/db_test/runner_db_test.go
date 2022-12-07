@@ -138,6 +138,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		// (too many INSERTs and DELETEs at the same time)
 		cat.Initialize(nil, nil)
 		test.TestCacheSizeIncreaseAfterCreate()
+		test.TestCacheSizeIncreaseAfterCreateComplex()
 		test.TestCacheSizeDecreaseAfterDelete()
 		test.TestCacheModifiedAfterUpdate()
 		afterEachRun()
