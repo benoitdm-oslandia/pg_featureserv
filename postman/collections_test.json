@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "06b9eaad-400a-4974-80e9-e5a0fe740358",
+		"_postman_id": "8dab4b02-f212-46be-b1d3-c4b2545679b2",
 		"name": "pg-featureserv",
 		"description": "Crunchy Data Feature Server for PostGIS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -20,6 +20,127 @@
 									"name": "{feature Id}",
 									"item": [
 										{
+											"name": "get Collection Feature",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"// TEST SUCCESS 200",
+															"const body =  pm.response.json();",
+															"pm.test(\"Status code is 200\", function () {",
+															"  pm.response.to.have.status(200);",
+															"});",
+															"",
+															"//TESTS RESPONSES",
+															"var body_properties=['type','id','geometry','properties']",
+															"",
+															"    // test body properties",
+															"    for (var i = 0; i < body_properties.length; i++){",
+															"    pm.expect(body).to.have.property(body_properties[i])",
+															"    }",
+															"",
+															"    // test body.geometry features",
+															"    var geometryArray=['type','coordinates']",
+															"    for (var j = 0; j < geometryArray.length; j++){",
+															"    pm.expect(body.geometry).to.have.property(geometryArray[j])",
+															"    }",
+															"",
+															"    // test body.properties features",
+															"    var propertiesArray=['prop_b','prop_d','prop_f','prop_i','prop_j','prop_l','prop_r','prop_t']",
+															"    for (var k = 0; k < propertiesArray.length; k++){",
+															"    pm.expect(body.properties).to.have.property(propertiesArray[k])",
+															"    }",
+															"    // test headers",
+															"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/geo+json\")"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "",
+														"value": "",
+														"type": "text",
+														"disabled": true
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/{{featureId}}",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"collections",
+														"{{collectionId}}",
+														"items",
+														"{{featureId}}"
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "GeoJSON Feature document containing feature data",
+													"originalRequest": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"collections",
+																":collectionId",
+																"items",
+																":featureId"
+															],
+															"query": [
+																{
+																	"key": "properties",
+																	"value": "a,b,c"
+																},
+																{
+																	"key": "transform",
+																	"value": "Centroid|Buffer|1"
+																},
+																{
+																	"key": "crs",
+																	"value": "4326"
+																}
+															],
+															"variable": [
+																{
+																	"key": "collectionId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) ID of collection."
+																},
+																{
+																	"key": "featureId",
+																	"value": "commodo labore anim",
+																	"description": "(Required) Id of feature in collection to retrieve data for."
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "text",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "text/plain"
+														}
+													],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										},
+										{
 											"name": "delete Collection Feature",
 											"event": [
 												{
@@ -31,7 +152,16 @@
 															"pm.test(\"Status code is 204\", function () {",
 															"  pm.response.to.have.status(204);",
 															"});",
-															""
+															"",
+															"// Check the GEt request after the POST",
+															"let collectionId= pm.collectionVariables.get(\"collectionId\")",
+															"let baseURL= pm.collectionVariables.get(\"baseURL\")",
+															"let newFeatureId= pm.collectionVariables.get(\"newFeatureId\")",
+															"",
+															"// Check if the newFeatureId is DEL",
+															"pm.sendRequest(baseURL+'/collections/'+collectionId+'/items/'+newFeatureId, (error, response) => {",
+															"pm.expect(response).to.not.have.property('code', 200);",
+															"});"
 														],
 														"type": "text/javascript"
 													}
@@ -41,7 +171,7 @@
 												"method": "DELETE",
 												"header": [],
 												"url": {
-													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/{{newCollectionId}}",
+													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/{{newFeatureId}}",
 													"host": [
 														"{{baseUrl}}"
 													],
@@ -49,7 +179,7 @@
 														"collections",
 														"{{collectionId}}",
 														"items",
-														"{{newCollectionId}}"
+														"{{newFeatureId}}"
 													]
 												}
 											},
@@ -183,121 +313,44 @@
 											]
 										},
 										{
-											"name": "get Collection Feature",
+											"name": "update Collection Feature",
 											"event": [
 												{
 													"listen": "test",
 													"script": {
 														"exec": [
-															"// TEST SUCCESS 200",
-															"const body =  pm.response.json();",
-															"pm.test(\"Status code is 200\", function () {",
-															"  pm.response.to.have.status(200);",
+															"// TEST SUCCESS 204",
+															"const body =  pm.response;",
+															"pm.test(\"Status code is 204\", function () {",
+															"  pm.response.to.have.status(204);",
 															"});",
 															"",
-															"//TESTS RESPONSES",
-															"var body_properties=['type','id','geometry','properties']",
-															"",
-															"    // test body properties",
-															"    for (var i = 0; i < body_properties.length; i++){",
-															"    pm.expect(body).to.have.property(body_properties[i])",
+															"\t// test headers",
+															"    function validURL(str) {",
+															"    var pattern = new RegExp('^(https?:\\\\/\\\\/)?'+ // protocol",
+															"        '((([a-z\\\\d]([a-z\\\\d-]*[a-z\\\\d])*)\\\\.)+[a-z]{2,}|'+ // domain name",
+															"        '((\\\\d{1,3}\\\\.){3}\\\\d{1,3}))'+ // OR ip (v4) address",
+															"        '(\\\\:\\\\d+)?(\\\\/[-a-z\\\\d%_.~+]*)*'+ // port and path",
+															"        '(\\\\?[;&a-z\\\\d%_.~+=-]*)?'+ // query string",
+															"        '(\\\\#[-a-z\\\\d_]*)?$','i'); // fragment locator",
+															"    return !!pattern.test(str);",
 															"    }",
-															"",
-															"    // test body.geometry features",
-															"    var geometryArray=['type','coordinates']",
-															"    for (var j = 0; j < geometryArray.length; j++){",
-															"    pm.expect(body.geometry).to.have.property(geometryArray[j])",
-															"    }",
-															"",
-															"    // test body.properties features",
-															"    var propertiesArray=['prop_b','prop_d','prop_f','prop_i','prop_j','prop_l','prop_r','prop_t']",
-															"    for (var k = 0; k < propertiesArray.length; k++){",
-															"    pm.expect(body.properties).to.have.property(propertiesArray[k])",
-															"    }",
-															"    // test headers",
-															"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/geo+json\")"
+															"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+															"    pm.expect(responseHeaders[\"Location\"]).to.include(baseURL)",
+															"    pm.expect(validURL(responseHeaders[\"Location\"]))",
+															"    // save new id for delete test",
+															"    var result =responseHeaders[\"Location\"].split(baseURL)",
+															"    let val =result[result.length-1]",
+															"    var value=pm.collectionVariables.set(\"newCollectionId\",val);",
+															""
 														],
 														"type": "text/javascript"
 													}
 												}
 											],
-											"request": {
-												"method": "GET",
-												"header": [],
-												"url": {
-													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/241",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"collections",
-														"{{collectionId}}",
-														"items",
-														"241"
-													]
-												}
+											"protocolProfileBehavior": {
+												"disabledSystemHeaders": {}
 											},
-											"response": [
-												{
-													"name": "GeoJSON Feature document containing feature data",
-													"originalRequest": {
-														"method": "GET",
-														"header": [],
-														"url": {
-															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
-															"host": [
-																"{{baseUrl}}"
-															],
-															"path": [
-																"collections",
-																":collectionId",
-																"items",
-																":featureId"
-															],
-															"query": [
-																{
-																	"key": "properties",
-																	"value": "a,b,c"
-																},
-																{
-																	"key": "transform",
-																	"value": "Centroid|Buffer|1"
-																},
-																{
-																	"key": "crs",
-																	"value": "4326"
-																}
-															],
-															"variable": [
-																{
-																	"key": "collectionId",
-																	"value": "commodo labore anim",
-																	"description": "(Required) ID of collection."
-																},
-																{
-																	"key": "featureId",
-																	"value": "commodo labore anim",
-																	"description": "(Required) Id of feature in collection to retrieve data for."
-																}
-															]
-														}
-													},
-													"status": "OK",
-													"code": 200,
-													"_postman_previewlanguage": "text",
-													"header": [
-														{
-															"key": "Content-Type",
-															"value": "text/plain"
-														}
-													],
-													"cookie": [],
-													"body": ""
-												}
-											]
-										},
-										{
-											"name": "update Collection Feature",
 											"request": {
 												"method": "PATCH",
 												"header": [
@@ -308,7 +361,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+													"raw": "{\n\t\"geometry\": {\n\t\t\"type\": \"Point\",\n\t\t\"coordinates\": [\n\t\t\t-70,\n\t\t\t356\n\t\t]\n\t},\n\t\"properties\": {\n\n\t\t\"prop_d\": \"2022-10-19T10:23:42.308902717+02:00\",\n\t\t\"prop_j\": {\n\t\t\t\"Name\": \"99999\",\n\t\t\t\"IsDesc\": false\n\t\t}\n\t},\n\t\"type\": \"FeatureCollection\"\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -316,27 +369,15 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
+													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/{{featureId}}",
 													"host": [
 														"{{baseUrl}}"
 													],
 													"path": [
 														"collections",
-														":collectionId",
+														"{{collectionId}}",
 														"items",
-														":featureId"
-													],
-													"variable": [
-														{
-															"key": "collectionId",
-															"value": "commodo labore anim",
-															"description": "(Required) ID of collection."
-														},
-														{
-															"key": "featureId",
-															"value": "commodo labore anim",
-															"description": "(Required) Id of feature in collection to retrieve data for."
-														}
+														"{{featureId}}"
 													]
 												}
 											},
@@ -447,6 +488,9 @@
 										},
 										{
 											"name": "replace Collection Feature",
+											"protocolProfileBehavior": {
+												"disabledSystemHeaders": {}
+											},
 											"request": {
 												"method": "PUT",
 												"header": [
@@ -457,7 +501,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
+													"raw": "{\n    \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n            -70.884619566,\n            47.807897059\n        ]\n    },\n    \"properties\": {\n        \"prop_b\": [\n            false\n        ],\n        \"prop_d\": \"2022-10-25T00:00:00Z\",\n        \"prop_f\": 47.807897059236495,\n        \"prop_i\": 4,\n        \"prop_j\": {},\n        \"prop_l\": 48,\n        \"prop_r\": 5,\n        \"prop_t\": \"prop_t\"\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -465,44 +509,15 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId?properties=a,b,c&transform=Centroid|Buffer|1&crs=4326",
+													"raw": "{{baseUrl}}/collections/public.mock_multi/items/{{featureId}}",
 													"host": [
 														"{{baseUrl}}"
 													],
 													"path": [
 														"collections",
-														":collectionId",
+														"public.mock_multi",
 														"items",
-														":featureId"
-													],
-													"query": [
-														{
-															"key": "properties",
-															"value": "a,b,c",
-															"description": "List of properties to return in response objects"
-														},
-														{
-															"key": "transform",
-															"value": "Centroid|Buffer|1",
-															"description": "Geometry transformation function pipeline to apply"
-														},
-														{
-															"key": "crs",
-															"value": "4326",
-															"description": "SRID for coordinate reference system of output features."
-														}
-													],
-													"variable": [
-														{
-															"key": "collectionId",
-															"value": "commodo labore anim",
-															"description": "(Required) ID of collection."
-														},
-														{
-															"key": "featureId",
-															"value": "commodo labore anim",
-															"description": "(Required) Id of feature in collection to retrieve data for."
-														}
+														"{{featureId}}"
 													]
 												}
 											},
@@ -745,6 +760,10 @@
 													"    // test length of body.links ",
 													"",
 													"    pm.expect(body.links.length).to.equal(2)",
+													"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+													"    for (var m=0 ;m< body.links.length;m++){",
+													"        pm.expect(body.links[m]['href']).to.include(baseURL)",
+													"    }",
 													"",
 													"    //test headers",
 													"",
@@ -872,10 +891,9 @@
 													"pm.test(\"Status code is 201\", function () {",
 													"  pm.response.to.have.status(201);",
 													"});",
-													"console.log(responseHeaders[\"Location\"]);",
+													"",
 													"",
 													"\t// test headers",
-													"",
 													"    function validURL(str) {",
 													"    var pattern = new RegExp('^(https?:\\\\/\\\\/)?'+ // protocol",
 													"        '((([a-z\\\\d]([a-z\\\\d-]*[a-z\\\\d])*)\\\\.)+[a-z]{2,}|'+ // domain name",
@@ -885,15 +903,20 @@
 													"        '(\\\\#[-a-z\\\\d_]*)?$','i'); // fragment locator",
 													"    return !!pattern.test(str);",
 													"    }",
-													"",
-													"",
-													"    // save new id for delete test",
+													"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+													"    pm.expect(responseHeaders[\"Location\"]).to.include(baseURL)",
 													"    pm.expect(validURL(responseHeaders[\"Location\"]))",
-													"    console.log(validURL(responseHeaders[\"Location\"]))",
+													"",
+													"    // save new id for DEL test",
 													"    var result =responseHeaders[\"Location\"].split(\"/\")",
 													"    let val =result[result.length-1]",
-													"    var value=pm.collectionVariables.set(\"newCollectionId\",val);",
-													""
+													"    var newFeatureId=pm.collectionVariables.set(\"newFeatureId\",val);",
+													"",
+													"// Check the GEt request after the POST",
+													"let collectionId= pm.collectionVariables.get(\"collectionId\")",
+													"pm.sendRequest(baseURL+'/collections/'+collectionId+'/items/'+val, (error, response) => {",
+													"pm.expect(response).to.have.property('code', 200);",
+													"});"
 												],
 												"type": "text/javascript"
 											}
@@ -1025,6 +1048,11 @@
 											"",
 											"    var linksArray = body.links",
 											"    pm.expect(linksArray.length).to.equal(3)",
+											"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+											"    for (var m=0 ;m< body.links.length;m++){",
+											"        pm.expect(body.links[m]['href']).to.include(baseURL)",
+											"    }",
+											"",
 											"",
 											"    // test headers",
 											"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")",
@@ -1246,6 +1274,12 @@
 									"    //test length of body.links ",
 									"    var linksArray = body.links",
 									"    pm.expect(linksArray.length).to.equal(2)",
+									"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+									"    for (var m=0 ;m< body.links.length;m++){",
+									"        pm.expect(body.links[m]['href']).to.include(baseURL)",
+									"    }",
+									"",
+									"",
 									"",
 									"    // test body.links titles",
 									"",
@@ -1564,9 +1598,6 @@
 									"    pm.expect(body).to.have.property(body_properties[i])",
 									"    }",
 									"",
-									"    // test length of body.links ",
-									"",
-									"    pm.expect(body.links.length).to.equal(2)",
 									"",
 									"    // test body.links features",
 									"    var links_features=['href','rel','type','title']",
@@ -1574,6 +1605,14 @@
 									"        for (var l = 0; l < links_features.length; l++){",
 									"    pm.expect(body.links[j]).to.have.property(links_features[l])",
 									"    }}",
+									"",
+									"    // test length of body.links ",
+									"",
+									"    pm.expect(body.links.length).to.equal(2)",
+									"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+									"    for (var k=0 ;k< body.links.length;k++){",
+									"        pm.expect(body.links[k]['href']).to.include(baseURL)",
+									"    }",
 									"",
 									"    // test headers",
 									"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")"
@@ -1658,6 +1697,7 @@
 							"        for (var l=0; l<links_features.length; l++){",
 							"            pm.expect(linksArray[k]).to.have.property(links_features[l])",
 							"    }}",
+							"    ",
 							"",
 							"    // test urls path ",
 							"    var links_url=['index','index.html','api','conformance','collections','functions']",
@@ -1666,7 +1706,13 @@
 							"        pm.expect(linksArray[m].href).to.equal(url);",
 							"    }",
 							"",
-							""
+							"    // test length / baseURl body.links ",
+							"",
+							"    pm.expect(body.links.length).to.equal(6)",
+							"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
+							"    for (var m=0 ;m< body.links.length;m++){",
+							"        pm.expect(body.links[m]['href']).to.include(baseURL)",
+							"    }"
 						],
 						"type": "text/javascript"
 					}
@@ -1906,7 +1952,12 @@
 		},
 		{
 			"key": "featureId",
-			"value": "219",
+			"value": "253",
+			"type": "string"
+		},
+		{
+			"key": "newFeatureId",
+			"value": "",
 			"type": "string"
 		},
 		{
