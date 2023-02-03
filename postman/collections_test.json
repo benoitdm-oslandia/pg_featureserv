@@ -31,7 +31,7 @@
 															"pm.test(\"Status code is 200\", function () {",
 															"  pm.response.to.have.status(200);",
 															"});",
-															"",
+															"console.log(pm.response)",
 															"//TESTS RESPONSES",
 															"var body_properties=['type','id','geometry','properties']",
 															"",
@@ -58,14 +58,21 @@
 													}
 												}
 											],
+											"protocolProfileBehavior": {
+												"disabledSystemHeaders": {
+													"user-agent": true,
+													"accept": true,
+													"accept-encoding": true,
+													"connection": true
+												}
+											},
 											"request": {
 												"method": "GET",
 												"header": [
 													{
-														"key": "",
-														"value": "",
-														"type": "text",
-														"disabled": true
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
 													}
 												],
 												"url": {
@@ -155,12 +162,24 @@
 															"",
 															"// Check the GEt request after the POST",
 															"let collectionId= pm.collectionVariables.get(\"collectionId\")",
-															"let baseURL= pm.collectionVariables.get(\"baseURL\")",
-															"let newFeatureId= pm.collectionVariables.get(\"newFeatureId\")",
+															"let baseURL= pm.collectionVariables.get(\"baseUrl\")",
+															"let newFeatureId=pm.collectionVariables.get(\"newFeatureId\")",
 															"",
 															"// Check if the newFeatureId is DEL",
-															"pm.sendRequest(baseURL+'/collections/'+collectionId+'/items/'+newFeatureId, (error, response) => {",
-															"pm.expect(response).to.not.have.property('code', 200);",
+															"const getTaxAccessToken={",
+															"  url: baseURL+'/collections/'+collectionId+'/items/'+newFeatureId,",
+															"  method: \"get\",",
+															"  body: {",
+															"  },",
+															"  header: {",
+															"      'Accept': ''",
+															"  }",
+															"};",
+															"",
+															"",
+															"pm.sendRequest(getTaxAccessToken, (error, response_get) => {",
+															"pm.expect(response_get).not.have.property('code', 200);",
+															"console.log(response_get)",
 															"});"
 														],
 														"type": "text/javascript"
@@ -320,28 +339,76 @@
 													"script": {
 														"exec": [
 															"// TEST SUCCESS 204",
-															"const body =  pm.response;",
+															"const body = pm.response;",
 															"pm.test(\"Status code is 204\", function () {",
-															"  pm.response.to.have.status(204);",
+															"    pm.response.to.have.status(204);",
 															"});",
 															"",
-															"\t// test headers",
-															"    function validURL(str) {",
-															"    var pattern = new RegExp('^(https?:\\\\/\\\\/)?'+ // protocol",
-															"        '((([a-z\\\\d]([a-z\\\\d-]*[a-z\\\\d])*)\\\\.)+[a-z]{2,}|'+ // domain name",
-															"        '((\\\\d{1,3}\\\\.){3}\\\\d{1,3}))'+ // OR ip (v4) address",
-															"        '(\\\\:\\\\d+)?(\\\\/[-a-z\\\\d%_.~+]*)*'+ // port and path",
-															"        '(\\\\?[;&a-z\\\\d%_.~+=-]*)?'+ // query string",
-															"        '(\\\\#[-a-z\\\\d_]*)?$','i'); // fragment locator",
-															"    return !!pattern.test(str);",
+															"let collectionId = pm.collectionVariables.get(\"collectionId\")",
+															"let baseURL = pm.collectionVariables.get(\"baseUrl\")",
+															"let featureIdPast = pm.collectionVariables.get(\"featureId\")",
+															"",
+															"//TESTS RESPONSES",
+															"",
+															"pm.sendRequest({",
+															"    url: baseURL + '/collections/' + collectionId + '/items/' + featureIdPast,",
+															"    method: 'GET',",
+															"    header: {",
+															"        'Accept': '',",
 															"    }",
-															"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
-															"    pm.expect(responseHeaders[\"Location\"]).to.include(baseURL)",
-															"    pm.expect(validURL(responseHeaders[\"Location\"]))",
-															"    // save new id for delete test",
-															"    var result =responseHeaders[\"Location\"].split(baseURL)",
-															"    let val =result[result.length-1]",
-															"    var value=pm.collectionVariables.set(\"newCollectionId\",val);",
+															"}, (error, response) => {",
+															"    var get_before = response.json();",
+															"    console.log('get_before:', get_before)",
+															"    pm.expect(response).have.property('code', 200);",
+															"",
+															"    pm.sendRequest({",
+															"        url: baseURL + '/collections/' + collectionId + '/items/' + featureIdPast,",
+															"        body: `{",
+															"\t\"geometry\": {",
+															"\t\t\"type\": \"Point\",",
+															"\t\t\"coordinates\": [",
+															"\t\t\t75,",
+															"\t\t\t35",
+															"\t\t]",
+															"\t},",
+															"\t\"properties\": {",
+															"\t\t\"prop_d\": \"2022-10-19T10:23:42.308902717+02:00\",",
+															"\t\t\"prop_j\": {",
+															"\t\t\t\"Name\": \"99999\",",
+															"\t\t\t\"IsDesc\": false",
+															"\t\t}",
+															"\t},",
+															"\t\"type\": \"FeatureCollection\"",
+															"}`,",
+															"        method: 'PATCH',",
+															"        header: {",
+															"            'Accept': '',",
+															"        }",
+															"    }, (error, response) => {",
+															"        console.log(response);",
+															"        pm.expect(response).have.property('code', 204);",
+															"",
+															"        pm.sendRequest({",
+															"            url: baseURL + '/collections/' + collectionId + '/items/' + featureIdPast,",
+															"            method: 'GET',",
+															"            header: {",
+															"                'Accept': '',",
+															"            }",
+															"        }, (error, response) => {",
+															"            var get_after = response.json();",
+															"            pm.expect(get_before.geometry.coordinates[0]).is.eql(65)",
+															"            pm.expect(get_after.geometry.coordinates[0]).is.eql(75)",
+															"            pm.expect(get_before.properties).is.eql(get_after.properties)",
+															"            pm.expect(get_before.properties).is.eql(get_after.properties)",
+															"",
+															"        })",
+															"    })",
+															"",
+															"})",
+															"",
+															"",
+															"",
+															"",
 															""
 														],
 														"type": "text/javascript"
@@ -361,7 +428,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n\t\"geometry\": {\n\t\t\"type\": \"Point\",\n\t\t\"coordinates\": [\n\t\t\t-70,\n\t\t\t356\n\t\t]\n\t},\n\t\"properties\": {\n\n\t\t\"prop_d\": \"2022-10-19T10:23:42.308902717+02:00\",\n\t\t\"prop_j\": {\n\t\t\t\"Name\": \"99999\",\n\t\t\t\"IsDesc\": false\n\t\t}\n\t},\n\t\"type\": \"FeatureCollection\"\n}",
+													"raw": "{\n\t\"geometry\": {\n\t\t\"type\": \"Point\",\n\t\t\"coordinates\": [\n            65,\n\t\t\t356\n\t\t]\n\t},\n\t\"properties\": {\n\t\t\"prop_d\": \"2022-10-19T10:23:42.308902717+02:00\",\n\t\t\"prop_j\": {\n\t\t\t\"Name\": \"99999\",\n\t\t\t\"IsDesc\": false\n\t\t}\n\t},\n\t\"type\": \"FeatureCollection\"\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -432,76 +499,133 @@
 													],
 													"cookie": [],
 													"body": ""
-												},
-												{
-													"name": "Resource not found",
-													"originalRequest": {
-														"method": "PATCH",
-														"header": [],
-														"body": {
-															"mode": "raw",
-															"raw": "{\n  \"geometry\": {\n    \"coordinates\": [\n      -70.88461956597838,\n      47.807897059236495\n    ],\n    \"type\": \"Point\"\n  },\n  \"properties\": {\n    \"prop_a\": \"propA\",\n    \"prop_b\": 1,\n    \"prop_c\": \"propC\",\n    \"prop_d\": 1\n  },\n  \"type\": \"Feature\"\n}",
-															"options": {
-																"raw": {
-																	"language": "json"
-																}
-															}
-														},
-														"url": {
-															"raw": "{{baseUrl}}/collections/:collectionId/items/:featureId",
-															"host": [
-																"{{baseUrl}}"
-															],
-															"path": [
-																"collections",
-																":collectionId",
-																"items",
-																":featureId"
-															],
-															"variable": [
-																{
-																	"key": "collectionId",
-																	"value": "commodo labore anim",
-																	"description": "(Required) ID of collection."
-																},
-																{
-																	"key": "featureId",
-																	"value": "commodo labore anim",
-																	"description": "(Required) Id of feature in collection to retrieve data for."
-																}
-															]
-														}
-													},
-													"status": "Not Found",
-													"code": 404,
-													"_postman_previewlanguage": "text",
-													"header": [
-														{
-															"key": "Content-Type",
-															"value": "text/plain"
-														}
-													],
-													"cookie": [],
-													"body": ""
 												}
 											]
 										},
 										{
 											"name": "replace Collection Feature",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"// TEST SUCCESS 204",
+															"const body = pm.response;",
+															"pm.test(\"Status code is 204\", function () {",
+															"    pm.response.to.have.status(204);",
+															"});",
+															"",
+															"let collectionId = pm.collectionVariables.get(\"collectionId\")",
+															"let baseURL = pm.collectionVariables.get(\"baseUrl\")",
+															"let featureId = pm.collectionVariables.get(\"featureId\")",
+															"",
+															"//TESTS RESPONSES",
+															"",
+															"pm.sendRequest({",
+															"    url: baseURL + '/collections/' + collectionId + '/items/' + featureId,",
+															"    method: 'GET',",
+															"    header: {",
+															"        'Accept': '',",
+															"    }",
+															"}, (error, response) => {",
+															"    var get_before = response.json();",
+															"    console.log('get_before:', get_before)",
+															"    pm.expect(response).have.property('code', 200);",
+															"    ",
+															"    pm.sendRequest({",
+															"        url: baseURL + '/collections/' + collectionId + '/items/' + featureId,",
+															"        body: `{",
+															"            \"type\": \"Feature\",",
+															"            \"geometry\": {",
+															"            \"type\": \"Point\",",
+															"            \"coordinates\": [",
+															"            70,",
+															"            35",
+															"            ]",
+															"            },",
+															"            \"properties\": {",
+															"            \"prop_b\": [ ",
+															"            false ",
+															"            ,",
+															"            true",
+															"            , false",
+															"            ],",
+															"            \"prop_d\": \"2022-12-19T09:55:35.694621271+01:00\",",
+															"            \"prop_f\": 99991,",
+															"            \"prop_i\": 99992,",
+															"            \"prop_j\": {",
+															"            \"Name\": \"99999\",",
+															"            \"IsDesc\": true",
+															"            },",
+															"            \"prop_l\": 99992,",
+															"            \"prop_r\": 99993,",
+															"            \"prop_t\": \"99999\",",
+															"            \"prop_v\": \"99999\"",
+															"            }",
+															"            }`,",
+															"        method: 'PUT',",
+															"        header: {",
+															"            'Accept': '',",
+															"        }",
+															"    }, (error, response) => {",
+															"        console.log(response);",
+															"        pm.expect(response).have.property('code', 204);",
+															"",
+															"        pm.sendRequest({",
+															"            url: baseURL + '/collections/' + collectionId + '/items/' + featureId,",
+															"            method: 'GET',",
+															"            header: {",
+															"                'Accept': '',",
+															"            }",
+															"        }, (error, response) => {",
+															"            var get_after = response.json();",
+															"            pm.expect( get_before.geometry.coordinates[0]).is.eql(65)",
+															"            pm.expect( get_after.geometry.coordinates[0]).is.eql(70)",
+															"            pm.expect(get_before.properties).is.eql(get_after.properties)",
+															"            pm.expect(get_before.properties).is.eql(get_after.properties)",
+															"        })",
+															"    })",
+															"",
+															"})",
+															"",
+															"",
+															"",
+															"",
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"",
+															"",
+															"",
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
 											"protocolProfileBehavior": {
-												"disabledSystemHeaders": {}
+												"disabledSystemHeaders": {
+													"accept": true
+												}
 											},
 											"request": {
 												"method": "PUT",
 												"header": [
 													{
 														"key": "Content-Type",
-														"value": "application/json"
+														"value": "application/json",
+														"disabled": true
 													}
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n            -70.884619566,\n            47.807897059\n        ]\n    },\n    \"properties\": {\n        \"prop_b\": [\n            false\n        ],\n        \"prop_d\": \"2022-10-25T00:00:00Z\",\n        \"prop_f\": 47.807897059236495,\n        \"prop_i\": 4,\n        \"prop_j\": {},\n        \"prop_l\": 48,\n        \"prop_r\": 5,\n        \"prop_t\": \"prop_t\"\n    }\n}",
+													"raw": "\n{\n\"type\": \"Feature\",\n\"geometry\": {\n\"type\": \"Point\",\n\"coordinates\": [\n65,\n35\n]\n},\n\"properties\": {\n\"prop_b\": [ \nfalse \n,\ntrue\n, false\n],\n\"prop_d\": \"2022-12-19T09:55:35.694621271+01:00\",\n\"prop_f\": 99991,\n\"prop_i\": 99992,\n\"prop_j\": {\n\"Name\": \"99999\",\n\"IsDesc\": true\n},\n\"prop_l\": 99992,\n\"prop_r\": 99993,\n\"prop_t\": \"99999\",\n\"prop_v\": \"99999\"\n}\n} ",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -509,13 +633,13 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrl}}/collections/public.mock_multi/items/{{featureId}}",
+													"raw": "{{baseUrl}}/collections/{{collectionId}}/items/{{featureId}}",
 													"host": [
 														"{{baseUrl}}"
 													],
 													"path": [
 														"collections",
-														"public.mock_multi",
+														"{{collectionId}}",
 														"items",
 														"{{featureId}}"
 													]
@@ -741,7 +865,6 @@
 													"    for (var i = 0; i < body_properties.length; i++){",
 													"    pm.expect(body).to.have.property(body_properties[i])",
 													"    }",
-													"",
 													"    // test body.features ",
 													"",
 													"    var featuresArray =['type','id','geometry','properties']",
@@ -775,6 +898,11 @@
 											}
 										}
 									],
+									"protocolProfileBehavior": {
+										"disabledSystemHeaders": {
+											"accept": true
+										}
+									},
 									"request": {
 										"method": "GET",
 										"header": [],
@@ -893,7 +1021,7 @@
 													"});",
 													"",
 													"",
-													"\t// test headers",
+													"// test headers",
 													"    function validURL(str) {",
 													"    var pattern = new RegExp('^(https?:\\\\/\\\\/)?'+ // protocol",
 													"        '((([a-z\\\\d]([a-z\\\\d-]*[a-z\\\\d])*)\\\\.)+[a-z]{2,}|'+ // domain name",
@@ -907,27 +1035,45 @@
 													"    pm.expect(responseHeaders[\"Location\"]).to.include(baseURL)",
 													"    pm.expect(validURL(responseHeaders[\"Location\"]))",
 													"",
-													"    // save new id for DEL test",
+													"  // save new id for DEL test",
 													"    var result =responseHeaders[\"Location\"].split(\"/\")",
 													"    let val =result[result.length-1]",
 													"    var newFeatureId=pm.collectionVariables.set(\"newFeatureId\",val);",
 													"",
-													"// Check the GEt request after the POST",
+													"// Check the Get request after the POST",
+													"",
 													"let collectionId= pm.collectionVariables.get(\"collectionId\")",
-													"pm.sendRequest(baseURL+'/collections/'+collectionId+'/items/'+val, (error, response) => {",
-													"pm.expect(response).to.have.property('code', 200);",
-													"});"
+													"const GET_feature={",
+													"  url:baseURL+'/collections/'+collectionId+'/items/'+val,",
+													"  method: \"get\",",
+													"  body: {",
+													"  },",
+													"  header: {",
+													"       'Accept': ''",
+													"  }",
+													"};",
+													"pm.sendRequest(GET_feature, (error, response_get) => {",
+													"console.log(response_get)",
+													"pm.expect(response_get).to.have.property('code', 200);",
+													"});",
+													""
 												],
 												"type": "text/javascript"
 											}
 										}
 									],
+									"protocolProfileBehavior": {
+										"disabledSystemHeaders": {
+											"accept": true
+										}
+									},
 									"request": {
 										"method": "POST",
 										"header": [
 											{
 												"key": "Content-Type",
-												"value": "application/json"
+												"value": "application/json",
+												"disabled": true
 											}
 										],
 										"body": {
@@ -1044,24 +1190,18 @@
 											"    }",
 											"    }",
 											"",
-											"    // test length of body.links",
-											"",
-											"    var linksArray = body.links",
-											"    pm.expect(linksArray.length).to.equal(3)",
-											"    let baseURL=pm.collectionVariables.get(\"baseUrl\")",
-											"    for (var m=0 ;m< body.links.length;m++){",
-											"        pm.expect(body.links[m]['href']).to.include(baseURL)",
-											"    }",
-											"",
-											"",
-											"    // test headers",
-											"    pm.expect(responseHeaders['Content-Type']).to.equal(\"application/json\")",
+											"  ",
 											""
 										],
 										"type": "text/javascript"
 									}
 								}
 							],
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {
+									"accept": true
+								}
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1127,7 +1267,6 @@
 									"script": {
 										"exec": [
 											" // TEST SUCCESS 200",
-											"// TEST SUCCESS 200",
 											"const body =  pm.response.json();",
 											"console.log(body)",
 											"pm.test(\"Status code is 200\", function () {",
@@ -1278,8 +1417,6 @@
 									"    for (var m=0 ;m< body.links.length;m++){",
 									"        pm.expect(body.links[m]['href']).to.include(baseURL)",
 									"    }",
-									"",
-									"",
 									"",
 									"    // test body.links titles",
 									"",
@@ -1796,7 +1933,7 @@
 							"",
 							"    // test length of body.paths ",
 							"    var len_paths = Object.keys(body.paths).length;",
-							"    pm.expect(len_paths).to.equal(11)",
+							"    pm.expect(len_paths).to.equal(12)",
 							"",
 							"    // test headers",
 							"    pm.expect(responseHeaders['Transfer-Encoding']).to.equal(\"chunked\")",
@@ -1962,6 +2099,15 @@
 		},
 		{
 			"key": "newCollectionId",
+			"value": ""
+		},
+		{
+			"key": "coordinates_put",
+			"value": "70",
+			"type": "string"
+		},
+		{
+			"key": "get_before",
 			"value": ""
 		}
 	]
