@@ -59,7 +59,7 @@ func CreateTestDb() *pgxpool.Pool {
 
 	CreateSchema(db, "complex")
 	InsertSimpleDataset(db, "public")
-	InsertComplexDataset(db, "complex")
+	InsertComplexDataset(db, "complex", "mock_multi")
 
 	log.Debugf("Sample data injected")
 
@@ -162,13 +162,13 @@ func MakeGeojsonFeatureMockPoint(id int, x float64, y float64) *api.GeojsonFeatu
 	return &feat
 }
 
-func InsertComplexDataset(db *pgxpool.Pool, schema string) {
+func InsertComplexDataset(db *pgxpool.Pool, schema string, tablename string) {
 	ctx := context.Background()
 	// NOT same as featureMock
 	// TODO: mark all props as required with NOT NULL contraint?
 	_, errExec := db.Exec(ctx, fmt.Sprintf(`
-		DROP TABLE IF EXISTS %s.mock_multi CASCADE;
-		CREATE TABLE IF NOT EXISTS %s.mock_multi (
+		DROP TABLE IF EXISTS %s.%s CASCADE;
+		CREATE TABLE IF NOT EXISTS %s.%s (
 			geometry public.geometry(Point, 4326) NOT NULL,
 			fid SERIAL PRIMARY KEY,
 			prop_t text NOT NULL,
@@ -181,7 +181,7 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 			prop_j json NOT NULL,
 			prop_v varchar NOT NULL
 		);
-		`, schema, schema))
+		`, schema, tablename, schema, tablename))
 	if errExec != nil {
 		CloseTestDb(db)
 		log.Fatal(errExec)
@@ -200,8 +200,8 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 
 	b := &pgx.Batch{}
 	sqlStatement := fmt.Sprintf(`
-		INSERT INTO %s.mock_multi (geometry, prop_t, prop_i, prop_l, prop_f, prop_r, prop_b, prop_d, prop_j, prop_v)
-		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5, $6, $7, $8, $9, $10)`, schema)
+		INSERT INTO %s.%s (geometry, prop_t, prop_i, prop_l, prop_f, prop_r, prop_b, prop_d, prop_j, prop_v)
+		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5, $6, $7, $8, $9, $10)`, schema, tablename)
 
 	for _, f := range features {
 		geomStr, _ := f.Geom.MarshalJSON()
