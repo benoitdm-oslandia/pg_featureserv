@@ -1,0 +1,1 @@
+curl -X DELETE "http://localhost:9000/collections/public.jc_test/items/1" -H "accept: */*"
