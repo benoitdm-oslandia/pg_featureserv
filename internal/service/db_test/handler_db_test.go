@@ -30,6 +30,7 @@ import (
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
+	"github.com/paulmach/orb"
 )
 
 func (t *DbTests) TestProperDbInit() {
@@ -101,6 +102,21 @@ func (t *DbTests) TestGetFormatHandlingSuffix() {
 		checkRouteResponseFormat(t, "/collections/mock_a/items/2?limit=100", api.ContentTypeGeoJSON)
 		checkRouteResponseFormat(t, "/collections/mock_a/items/2.html?limit=100", api.ContentTypeHTML)
 		checkRouteResponseFormat(t, "/collections/mock_a/items/2.json?limit=100", api.ContentTypeGeoJSON)
+	})
+}
+
+func (t *DbTests) TestGetCrs() {
+	t.Test.Run("TestPropertiesAllFromDbSimpleTable", func(t *testing.T) {
+		rr := hTest.DoRequest(t, "/collections/mock_a/items?limit=2&crs=2154")
+
+		var v api.FeatureCollection
+		errUnMarsh := json.Unmarshal(hTest.ReadBody(rr), &v)
+		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
+
+		util.Equals(t, 2, len(v.Features), "# features")
+		util.Equals(t, 4, len(v.Features[0].Props), "feature 1 # properties")
+		util.Assert(t, v.Features[0].Geom.Geometry().(orb.Point).X() < -1e+5, "feature 1 # coordinate X")
+		util.Assert(t, v.Features[0].Geom.Geometry().(orb.Point).Y() > 1e+5, "feature 1 # coordinate Y")
 	})
 }
 
