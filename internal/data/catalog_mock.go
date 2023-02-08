@@ -293,7 +293,7 @@ func (cat *CatalogMock) TableSize(tableName string) int64 {
 	return int64(len(cat.tableData[tableName]))
 }
 
-func (cat *CatalogMock) AddTableFeature(ctx context.Context, tableName string, jsonData []byte) (int64, error) {
+func (cat *CatalogMock) AddTableFeature(ctx context.Context, tableName string, jsonData []byte, crs string) (int64, error) {
 	var newFeature featureMock
 
 	var schemaObject api.GeojsonFeatureData

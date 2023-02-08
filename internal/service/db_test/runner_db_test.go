@@ -78,6 +78,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestPropertiesAllFromDbComplexTable()
 		test.TestGetFormatHandlingSuffix()
 		test.TestGetCrs()
+		test.TestGetWrongCrs()
 		afterEachRun()
 	})
 	t.Run("DELETE", func(t *testing.T) {
@@ -102,6 +103,8 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestCreateSuperSimpleFeatureDb()
 		test.TestCreateComplexFeatureDb()
 		test.TestGetComplexCollectionCreateSchema()
+		test.TestCreateFeatureCrsDb()
+		test.TestCreateFeatureWrongCrsDb()
 		afterEachRun()
 	})
 	t.Run("UPDATE", func(t *testing.T) {

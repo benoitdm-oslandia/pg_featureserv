@@ -29,6 +29,7 @@ import (
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/paulmach/orb"
 )
 
 func (t *DbTests) TestCreateSimpleFeatureWithBadGeojsonInputDb() {
@@ -198,5 +199,74 @@ func (t *DbTests) TestCreateComplexFeatureDb() {
 
 		// check if it can be read
 		checkItem(t, "complex.mock_multi", maxIdAfter)
+	})
+}
+
+func (t *DbTests) TestCreateFeatureCrsDb() {
+	t.Test.Run("TestCreateSimpleFeatureDb", func(t *testing.T) {
+		var header = make(http.Header)
+		header.Add("Content-Type", "application/geo+json")
+		header.Add("Content-Crs", "2154")
+
+		//--- generate json from new object
+		tableName := "public.mock_a"
+		tables, _ := cat.Tables()
+		var cols []string
+		for _, tbl := range tables {
+			if tbl.ID == tableName {
+				for _, c := range tbl.Columns {
+					if c != "id" {
+						cols = append(cols, c)
+					}
+				}
+				break
+			}
+		}
+		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 657775, 6860705, cols)
+		// fmt.Println(jsonStr)
+
+		// -- do the request call but we have to force the catalogInstance to db during this operation
+		rr := hTest.DoPostRequest(t, "/collections/mock_a/items", []byte(jsonStr), header)
+
+		loc := rr.Header().Get("Location")
+		util.Assert(t, len(loc) > 1, "Header location must not be empty")
+
+		// check if coordinates were converted
+		rr = hTest.DoRequest(t, fmt.Sprintf("%s?crs=4326", strings.ReplaceAll(loc, "http://test", "")))
+		var v api.GeojsonFeatureData
+		errUnMarsh := json.Unmarshal(hTest.ReadBody(rr), &v)
+		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
+
+		util.Assert(t, v.Geom.Geometry().(orb.Point).X() < 3, "feature # coordinate lng")
+		util.Assert(t, v.Geom.Geometry().(orb.Point).Y() < 50, "feature # coordinate lat")
+	})
+}
+
+func (t *DbTests) TestCreateFeatureWrongCrsDb() {
+	t.Test.Run("TestCreateSimpleFeatureDb", func(t *testing.T) {
+		var header = make(http.Header)
+		header.Add("Content-Type", "application/geo+json")
+		header.Add("Content-Crs", "3")
+
+		//--- generate json from new object
+		tableName := "public.mock_a"
+		tables, _ := cat.Tables()
+		var cols []string
+		for _, tbl := range tables {
+			if tbl.ID == tableName {
+				for _, c := range tbl.Columns {
+					if c != "id" {
+						cols = append(cols, c)
+					}
+				}
+				break
+			}
+		}
+		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 657775, 6860705, cols)
+		// fmt.Println(jsonStr)
+
+		// -- do the request call but we have to force the catalogInstance to db during this operation
+		hTest.DoRequestMethodStatus(t, "POST", "/collections/mock_a/items", []byte(jsonStr), header, http.StatusBadRequest)
+
 	})
 }

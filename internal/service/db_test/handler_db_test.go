@@ -120,6 +120,12 @@ func (t *DbTests) TestGetCrs() {
 	})
 }
 
+func (t *DbTests) TestGetWrongCrs() {
+	t.Test.Run("TestPropertiesAllFromDbSimpleTable", func(t *testing.T) {
+		hTest.DoRequestStatus(t, "/collections/mock_a/items?limit=2&crs=3", http.StatusBadRequest)
+	})
+}
+
 // sends a GET request and checks the expected format (Content-Type header) from the response
 func checkRouteResponseFormat(t *testing.T, url string, expectedContentType string) {
 

@@ -272,7 +272,7 @@ func (cat *catalogDB) TableFeature(ctx context.Context, name string, id string, 
 	return features[0], nil
 }
 
-func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jsonData []byte) (int64, error) {
+func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jsonData []byte, crs string) (int64, error) {
 	var schemaObject api.GeojsonFeatureData
 	err := json.Unmarshal(jsonData, &schemaObject)
 	if err != nil {
@@ -312,7 +312,11 @@ func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jso
 
 	i++
 	columnStr = append(columnStr, tbl.GeometryColumn)
-	placementStr = append(placementStr, fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i))
+	geomStr := fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i)
+	if crs != "" {
+		geomStr = fmt.Sprintf("ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), 4326)", i, crs)
+	}
+	placementStr = append(placementStr, geomStr)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
 
