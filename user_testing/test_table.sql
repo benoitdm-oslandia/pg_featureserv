@@ -1,5 +1,5 @@
-drop table public.jc_test;
-create table public.jc_test (
-geom geometry(point, 4326),
-	name varchar
+DROP TABLE public.jc_test;
+CREATE TABLE public.jc_test (
+geom GEOMETRY(POINT, 4326),
+	"name" VARCHAR
 );
