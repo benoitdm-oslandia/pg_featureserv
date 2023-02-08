@@ -1,7 +1,5 @@
-drop table public.vt_test;
-create table public.vt_test (
-geom geometry(polygon, 4326),
-fid serial primary key,
-release int,
-capture_dates_range varchar
+drop table public.jc_test;
+create table public.jc_test (
+geom geometry(point, 4326),
+	name varchar
 );
