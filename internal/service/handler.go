@@ -774,9 +774,15 @@ func handleItem(w http.ResponseWriter, r *http.Request) *appError {
 			return appErrorBadRequest(errValSch, api.ErrMsgReplaceFeatureNotConform)
 		}
 
+		// retrieve crs
+		crs := r.Header.Get("Content-Crs")
+
 		// perform replace in database
-		err2 := catalogInstance.ReplaceTableFeature(r.Context(), tableName, fid, body)
+		err2 := catalogInstance.ReplaceTableFeature(r.Context(), tableName, fid, body, crs)
 		if err2 != nil {
+			if strings.Contains(err2.Error(), fmt.Sprintf("SRID (%v)", crs)) {
+				return appErrorBadRequest(err2, api.ErrMsgWrongCrs, crs)
+			}
 			return appErrorInternal(err2, api.ErrMsgReplaceFeature, tableName)
 		}
 
@@ -807,9 +813,15 @@ func handleItem(w http.ResponseWriter, r *http.Request) *appError {
 			return appErrorBadRequest(errChck, "validation error")
 		}
 
+		// retrieve crs
+		crs := r.Header.Get("Content-Crs")
+
 		// perform update in database
-		errUpdate := catalogInstance.PartialUpdateTableFeature(r.Context(), tableName, fid, body)
+		errUpdate := catalogInstance.PartialUpdateTableFeature(r.Context(), tableName, fid, body, crs)
 		if errUpdate != nil {
+			if strings.Contains(errUpdate.Error(), fmt.Sprintf("SRID (%v)", crs)) {
+				return appErrorBadRequest(errUpdate, api.ErrMsgWrongCrs, crs)
+			}
 			return appErrorInternal(errUpdate, api.ErrMsgPartialUpdateFeature, tableName)
 		}
 		w.WriteHeader(http.StatusNoContent)

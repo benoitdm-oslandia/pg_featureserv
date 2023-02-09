@@ -93,6 +93,8 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestSimpleReplaceFeatureSuccessDb()
 		test.TestGetComplexCollectionReplaceSchema()
 		test.TestReplaceComplexFeatureDb()
+		test.TestReplaceComplexFeatureDbCrs()
+		test.TestReplaceComplexFeatureDbWrongCrs()
 		afterEachRun()
 	})
 	t.Run("POST", func(t *testing.T) {
@@ -114,6 +116,8 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestUpdateComplexFeatureDb()
 		test.TestUpdateSimpleFeatureDb()
 		test.TestUpdateSimpleFeatureNoPropDb()
+		test.TesUpdateComplexFeatureDbCrs()
+		test.TesUpdateComplexFeatureDbWrongCrs()
 		afterEachRun()
 	})
 	t.Run("CACHE-ETAGS", func(t *testing.T) {

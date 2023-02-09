@@ -335,7 +335,7 @@ func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jso
 	return id, nil
 }
 
-func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) error {
+func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte, crs string) error {
 
 	idx, errInt := strconv.ParseInt(id, 10, 64)
 	if errInt != nil {
@@ -381,7 +381,11 @@ func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName s
 	if schemaObject.Geom != nil {
 		i++
 		columnStr = append(columnStr, tbl.GeometryColumn)
-		placementStr = append(placementStr, fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i))
+		geomStr := fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i)
+		if crs != "" {
+			geomStr = fmt.Sprintf("ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), 4326)", i, crs)
+		}
+		placementStr = append(placementStr, geomStr)
 		geomJson, _ := schemaObject.Geom.MarshalJSON()
 		values = append(values, geomJson)
 	}
@@ -410,7 +414,7 @@ func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName s
 	return nil
 }
 
-func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) error {
+func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte, crs string) error {
 
 	idx, errInt := strconv.ParseInt(id, 10, 64)
 	if errInt != nil {
@@ -449,7 +453,11 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 	}
 
 	i++
-	colValueStr = append(colValueStr, fmt.Sprintf("%s=ST_GeomFromGeoJSON($%d)", tbl.GeometryColumn, i))
+	geomStr := fmt.Sprintf("%s=ST_GeomFromGeoJSON($%d)", tbl.GeometryColumn, i)
+	if crs != "" {
+		geomStr = fmt.Sprintf("%s=ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), 4326)", tbl.GeometryColumn, i, crs)
+	}
+	colValueStr = append(colValueStr, geomStr)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
 

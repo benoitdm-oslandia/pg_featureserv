@@ -106,7 +106,7 @@ func (t *DbTests) TestGetFormatHandlingSuffix() {
 }
 
 func (t *DbTests) TestGetCrs() {
-	t.Test.Run("TestPropertiesAllFromDbSimpleTable", func(t *testing.T) {
+	t.Test.Run("TestGetCrs", func(t *testing.T) {
 		rr := hTest.DoRequest(t, "/collections/mock_a/items?limit=2&crs=2154")
 
 		var v api.FeatureCollection
@@ -121,14 +121,13 @@ func (t *DbTests) TestGetCrs() {
 }
 
 func (t *DbTests) TestGetWrongCrs() {
-	t.Test.Run("TestPropertiesAllFromDbSimpleTable", func(t *testing.T) {
+	t.Test.Run("TestGetWrongCrs", func(t *testing.T) {
 		hTest.DoRequestStatus(t, "/collections/mock_a/items?limit=2&crs=3", http.StatusBadRequest)
 	})
 }
 
 // sends a GET request and checks the expected format (Content-Type header) from the response
 func checkRouteResponseFormat(t *testing.T, url string, expectedContentType string) {
-
 	resp := hTest.DoRequestStatus(t, url, http.StatusOK)
 	respContentType := resp.Result().Header["Content-Type"][0]
 	util.Equals(t, expectedContentType, respContentType, fmt.Sprintf("wrong Content-Type: %s", respContentType))

@@ -328,7 +328,7 @@ func (cat *CatalogMock) AddTableFeature(ctx context.Context, tableName string, j
 	return maxId + 1, nil
 }
 
-func (cat *CatalogMock) PartialUpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) error {
+func (cat *CatalogMock) PartialUpdateTableFeature(ctx context.Context, tableName string, id string, jsonData []byte, crs string) error {
 
 	var schemaObject api.GeojsonFeatureData
 	err1 := json.Unmarshal(jsonData, &schemaObject)
@@ -373,7 +373,7 @@ func (cat *CatalogMock) PartialUpdateTableFeature(ctx context.Context, tableName
 	return nil
 }
 
-func (cat *CatalogMock) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte) error {
+func (cat *CatalogMock) ReplaceTableFeature(ctx context.Context, tableName string, id string, jsonData []byte, crs string) error {
 	var schemaObject api.GeojsonFeatureData
 	err1 := json.Unmarshal(jsonData, &schemaObject)
 	if err1 != nil {
