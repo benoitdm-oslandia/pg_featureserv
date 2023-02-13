@@ -314,7 +314,7 @@ func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jso
 	columnStr = append(columnStr, tbl.GeometryColumn)
 	geomStr := fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i)
 	if crs != "" {
-		geomStr = fmt.Sprintf("ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), 4326)", i, crs)
+		geomStr = fmt.Sprintf("ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), %v)", i, crs, tbl.Srid)
 	}
 	placementStr = append(placementStr, geomStr)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
@@ -383,7 +383,7 @@ func (cat *catalogDB) PartialUpdateTableFeature(ctx context.Context, tableName s
 		columnStr = append(columnStr, tbl.GeometryColumn)
 		geomStr := fmt.Sprintf("ST_GeomFromGeoJSON($%d)", i)
 		if crs != "" {
-			geomStr = fmt.Sprintf("ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), 4326)", i, crs)
+			geomStr = fmt.Sprintf("ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), %v)", i, crs, tbl.Srid)
 		}
 		placementStr = append(placementStr, geomStr)
 		geomJson, _ := schemaObject.Geom.MarshalJSON()
@@ -455,7 +455,7 @@ func (cat *catalogDB) ReplaceTableFeature(ctx context.Context, tableName string,
 	i++
 	geomStr := fmt.Sprintf("%s=ST_GeomFromGeoJSON($%d)", tbl.GeometryColumn, i)
 	if crs != "" {
-		geomStr = fmt.Sprintf("%s=ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), 4326)", tbl.GeometryColumn, i, crs)
+		geomStr = fmt.Sprintf("%s=ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON($%d), %s), %v)", tbl.GeometryColumn, i, crs, tbl.Srid)
 	}
 	colValueStr = append(colValueStr, geomStr)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
