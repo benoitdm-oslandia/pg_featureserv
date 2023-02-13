@@ -106,6 +106,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test := DbTests{Test: t}
 		test.TestCreateSimpleFeatureWithBadGeojsonInputDb()
 		test.TestCreateSimpleFeatureDb()
+		test.TestCreateSuperSimpleFeatureDb()
 		test.TestCreateComplexFeatureDb()
 		test.TestGetComplexCollectionCreateSchema()
 		afterEachRun()
