@@ -95,9 +95,10 @@ type QueryParam struct {
 	FilterSql string
 	Filter    []*PropertyFilter
 	// Columns is the list of columns to return
-	Columns       []string
-	GroupBy       []string
-	SortBy        []api.Sorting
-	Precision     int
-	TransformFuns []api.TransformFunction
+	Columns            []string
+	GroupBy            []string
+	SortBy             []api.Sorting
+	Precision          int
+	TransformFuns      []api.TransformFunction
+	MaxAllowableOffset float64
 }
