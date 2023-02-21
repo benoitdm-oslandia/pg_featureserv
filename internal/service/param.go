@@ -30,19 +30,20 @@ type NameValMap map[string]string
 
 // RequestParam holds the parameters for a request
 type RequestParam struct {
-	Crs           int
-	Limit         int
-	Offset        int
-	Bbox          *api.Extent
-	BboxCrs       int
-	Properties    []string
-	Filter        string
-	FilterCrs     int
-	GroupBy       []string
-	SortBy        []api.Sorting
-	Precision     int
-	TransformFuns []api.TransformFunction
-	Values        NameValMap
+	Crs                int
+	Limit              int
+	Offset             int
+	Bbox               *api.Extent
+	BboxCrs            int
+	Properties         []string
+	Filter             string
+	FilterCrs          int
+	GroupBy            []string
+	SortBy             []api.Sorting
+	Precision          int
+	TransformFuns      []api.TransformFunction
+	MaxAllowableOffset float64
+	Values             NameValMap
 }
 
 func parseRequestParams(r *http.Request) (RequestParam, error) {
@@ -145,6 +146,13 @@ func parseRequestParams(r *http.Request) (RequestParam, error) {
 		return param, err
 	}
 
+	// --- max-allowable-offset parameter
+	// parseFloat(paramValues, key string, minVal float64, maxVal float64, defaultVal float64)
+	param.MaxAllowableOffset, err = parseFloat(paramValues, api.ParamMaxAllowableOffset, 0, 100000, 0)
+	if err != nil {
+		return param, err
+	}
+
 	return param, nil
 }
 
@@ -169,6 +177,25 @@ func parseInt(values NameValMap, key string, minVal int, maxVal int, defaultVal 
 		return defaultVal, nil
 	}
 	val, err := strconv.Atoi(valStr)
+	if err != nil {
+		return 0, fmt.Errorf(api.ErrMsgInvalidParameterValue, key, valStr)
+	}
+	if val < minVal {
+		val = minVal
+	}
+	if maxVal >= 0 && val > maxVal {
+		val = maxVal
+	}
+	return val, nil
+}
+
+func parseFloat(values NameValMap, key string, minVal float64, maxVal float64, defaultVal float64) (float64, error) {
+	valStr := values[key]
+	// key not present or missing value
+	if len(valStr) < 1 {
+		return defaultVal, nil
+	}
+	val, err := strconv.ParseFloat(valStr, 64)
 	if err != nil {
 		return 0, fmt.Errorf(api.ErrMsgInvalidParameterValue, key, valStr)
 	}
@@ -443,15 +470,16 @@ func parseFilter(paramMap map[string]string, colNameMap map[string]api.Column) [
 // createQueryParams applies any cross-parameter logic
 func createQueryParams(param *RequestParam, colNames []string, sourceSRID int) (*data.QueryParam, error) {
 	query := data.QueryParam{
-		Crs:           param.Crs,
-		Limit:         param.Limit,
-		Offset:        param.Offset,
-		Bbox:          param.Bbox,
-		BboxCrs:       param.BboxCrs,
-		GroupBy:       param.GroupBy,
-		SortBy:        param.SortBy,
-		Precision:     param.Precision,
-		TransformFuns: param.TransformFuns,
+		Crs:                param.Crs,
+		Limit:              param.Limit,
+		Offset:             param.Offset,
+		Bbox:               param.Bbox,
+		BboxCrs:            param.BboxCrs,
+		GroupBy:            param.GroupBy,
+		SortBy:             param.SortBy,
+		Precision:          param.Precision,
+		TransformFuns:      param.TransformFuns,
+		MaxAllowableOffset: param.MaxAllowableOffset,
 	}
 	cols := param.Properties
 	// --- if groupby is present it replaces properties (it may be empty)

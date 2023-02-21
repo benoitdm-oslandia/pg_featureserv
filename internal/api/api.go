@@ -93,20 +93,21 @@ const (
 // ================== ParamReserved ==================
 
 const (
-	ParamCrs        = "crs"
-	ParamLimit      = "limit"
-	ParamOffset     = "offset"
-	ParamBbox       = "bbox"
-	ParamBboxCrs    = "bbox-crs"
-	ParamFilter     = "filter"
-	ParamFilterCrs  = "filter-crs"
-	ParamGroupBy    = "groupby"
-	ParamOrderBy    = "orderby"
-	ParamPrecision  = "precision"
-	ParamProperties = "properties"
-	ParamSortBy     = "sortby"
-	ParamTransform  = "transform"
-	ParamType       = "type"
+	ParamCrs                = "crs"
+	ParamLimit              = "limit"
+	ParamOffset             = "offset"
+	ParamBbox               = "bbox"
+	ParamBboxCrs            = "bbox-crs"
+	ParamFilter             = "filter"
+	ParamFilterCrs          = "filter-crs"
+	ParamGroupBy            = "groupby"
+	ParamOrderBy            = "orderby"
+	ParamPrecision          = "precision"
+	ParamProperties         = "properties"
+	ParamSortBy             = "sortby"
+	ParamTransform          = "transform"
+	ParamType               = "type"
+	ParamMaxAllowableOffset = "max-allowable-offset"
 )
 
 // known query parameter name

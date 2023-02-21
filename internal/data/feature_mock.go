@@ -55,6 +55,32 @@ func makeFeatureMockPoint(tableName string, id int, x float64, y float64) *featu
 	return &feat
 }
 
+func makeFeatureMockPolygon(tableName string, val int, coords orb.Ring) *featureMock {
+
+	geom := geojson.NewGeometry(orb.Polygon{coords})
+
+	sum := fnv.New32a()
+	encodedContent, _ := json.Marshal(geom)
+	sum.Write(encodedContent)
+	weakEtag := fmt.Sprint(sum.Sum32())
+
+	httpDateString := api.GetCurrentHttpDate() // Last modified value
+
+	idstr := strconv.Itoa(val)
+
+	feat := featureMock{
+		GeojsonFeatureData: *api.MakeGeojsonFeature(
+			tableName,
+			idstr,
+			*geom,
+			map[string]interface{}{"prop_a": "propA", "prop_b": val, "prop_c": "propC", "prop_d": val % 10},
+			weakEtag,
+			httpDateString,
+		),
+	}
+	return &feat
+}
+
 func (fm *featureMock) toJSON(propNames []string) string {
 	props := fm.extractProperties(propNames)
 	return api.MakeGeojsonFeatureJSON("", fm.ID, *fm.Geom, props, fm.WeakEtag.Etag, fm.WeakEtag.LastModified)
@@ -135,6 +161,11 @@ func MakeFeatureMockPointAsJSON(tableName string, id int, x float64, y float64, 
 	return feat.toJSON(columns)
 }
 
+func MakeFeatureMockPolygonAsJSON(tableName string, id int, coords orb.Ring, columns []string) string {
+	feat := makeFeatureMockPolygon(tableName, id, coords)
+	return feat.toJSON(columns)
+}
+
 func MakeFeaturesMockPoint(tableName string, extent api.Extent, nx int, ny int) []*featureMock {
 	basex := extent.Minx
 	basey := extent.Miny
@@ -153,6 +184,19 @@ func MakeFeaturesMockPoint(tableName string, extent api.Extent, nx int, ny int) 
 
 			index++
 		}
+	}
+	return features
+}
+
+// Returns a slice of polygon featureMocks with as many entries into the coords slice as argument
+// val is an arbitraty value which is used to populate the properties values from each Feature
+func MakeFeaturesMockPolygon(tableName string, val int, coords []orb.Ring) []*featureMock {
+
+	features := make([]*featureMock, len(coords))
+	index := 0
+	for _, coord := range coords {
+		features[index] = makeFeatureMockPolygon(tableName, val, coord)
+		index++
 	}
 	return features
 }
