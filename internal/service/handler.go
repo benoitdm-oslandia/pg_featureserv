@@ -465,7 +465,6 @@ func handleCollectionItems(w http.ResponseWriter, r *http.Request) *appError {
 	}
 	param, errQuery := createQueryParams(&reqParam, tbl.Columns, tbl.Srid)
 	param.Filter = parseFilter(reqParam.Values, tbl.DbTypes)
-
 	if errQuery == nil {
 		ctx := r.Context()
 		switch format {

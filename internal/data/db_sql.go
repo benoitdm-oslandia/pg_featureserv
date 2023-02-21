@@ -308,9 +308,17 @@ const sqlFmtGeomCol = `ST_AsGeoJSON( %v %v ) AS _geojson`
 func sqlGeomCol(geomCol string, sourceSRID int, param *QueryParam) string {
 	geomColSafe := strconv.Quote(geomCol)
 	geomExpr := applyTransform(param.TransformFuns, geomColSafe)
-	geomOutExpr := transformToOutCrs(geomExpr, sourceSRID, param.Crs)
+	simplifiedGeom := simplifyWithTolerance(geomExpr, param.MaxAllowableOffset)
+	geomOutExpr := transformToOutCrs(simplifiedGeom, sourceSRID, param.Crs)
 	sql := fmt.Sprintf(sqlFmtGeomCol, geomOutExpr, sqlPrecisionArg(param.Precision))
 	return sql
+}
+
+func simplifyWithTolerance(geomOutExpr string, tolerance float64) string {
+	if tolerance == 0.0 {
+		return geomOutExpr
+	}
+	return fmt.Sprintf("ST_Simplify(%v, %v)", geomOutExpr, tolerance)
 }
 
 func transformToOutCrs(geomExpr string, sourceSRID, outSRID int) string {

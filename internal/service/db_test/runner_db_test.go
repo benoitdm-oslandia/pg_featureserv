@@ -163,6 +163,16 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestReplaceFeatureIfNoneMatchStarValueWithExistingRepresentationInCacheDb()
 		afterEachRun()
 	})
+	t.Run("LOD", func(t *testing.T) {
+		beforeEachRun()
+		test := DbTests{Test: t}
+		test.TestGeometrySimplificationSingleFeature()
+		test.TestGeometrySimplificationSeveralFeatures()
+		test.TestGeometrySimplificationNegativeValue()
+		test.TestGeometrySimplificationWrongFloatSeparatorValue()
+		test.TestGeometrySimplificationVariousSimplificationValues()
+		afterEachRun()
+	})
 
 	t.Run("SPECIAL_SCHEMA_TABLE_COLUMN", func(t *testing.T) {
 		beforeEachRun()
