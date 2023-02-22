@@ -101,11 +101,12 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 			prop_c text,
 			prop_d int
 		);
+		CREATE INDEX %s_geometry_idx ON %s USING GIST (geometry);
 	`)
 	for s := range tablesAndExtents {
 
 		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
-		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema)
+		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, s, tableNameWithSchema)
 
 		_, errExec := db.Exec(ctx, createStatement)
 		if errExec != nil {
@@ -162,11 +163,12 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string) {
 			id SERIAL PRIMARY KEY,
 			geometry public.geometry(Point, 4326) NOT NULL
 		);
+		CREATE INDEX %s_geometry_idx ON %s USING GIST (geometry);
 	`)
 	for s := range tablesAndExtents {
 
 		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
-		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema)
+		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, s, tableNameWithSchema)
 
 		_, errExec := db.Exec(ctx, createStatement)
 		if errExec != nil {
@@ -243,7 +245,8 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 			prop_j json NOT NULL,
 			prop_v varchar NOT NULL
 		);
-		`, schema, schema))
+		CREATE INDEX mock_multi_geometry_idx ON %s.mock_multi USING GIST (geometry);
+		`, schema, schema, schema))
 	if errExec != nil {
 		CloseTestDb(db)
 		log.Fatal(errExec)
