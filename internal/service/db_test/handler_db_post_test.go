@@ -98,7 +98,6 @@ func (t *DbTests) TestCreateSuperSimpleFeatureDb() {
 		tableName := "public.mock_ssimple"
 		var cols []string
 		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 12, 34, cols)
-		// fmt.Println(jsonStr)
 
 		// -- do the request call but we have to force the catalogInstance to db during this operation
 		hTest.DoPostRequest(t, "/collections/mock_ssimple/items", []byte(jsonStr), header)
