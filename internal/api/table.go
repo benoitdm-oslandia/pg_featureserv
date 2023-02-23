@@ -27,20 +27,21 @@ type Column struct {
 
 // Table holds metadata for table/view objects
 type Table struct {
-	ID             string
-	Schema         string
-	Table          string
-	Title          string
-	Description    string
-	GeometryType   string
-	GeometryColumn string
-	IDColumn       string
-	Srid           int
-	Extent         Extent
-	Columns        []string
-	DbTypes        map[string]Column
-	JSONTypes      []JSONType
-	ColDesc        []string
+	ID              string
+	Schema          string
+	Table           string
+	Title           string
+	Description     string
+	GeometryType    string
+	GeometryColumn  string
+	IDColumn        string
+	Srid            int
+	Extent          Extent
+	Columns         []string
+	DbTypes         map[string]Column
+	JSONTypes       []JSONType
+	ColDesc         []string
+	IDColHasDefault bool
 }
 
 // Check the existence of table fields from json data

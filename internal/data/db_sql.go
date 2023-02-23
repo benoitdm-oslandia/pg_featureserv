@@ -37,6 +37,7 @@ const sqlTables = `SELECT
 	postgis_typmod_srid(a.atttypmod) AS srid,
 	postgis_typmod_type(a.atttypmod) AS geometry_type,
 	coalesce(ia.attname, '') AS id_column,
+	(cols.column_default IS NOT NULL) AS id_col_has_default,
 	(
 		SELECT array_agg(ARRAY[sa.attname, st.typname, coalesce(da.description,''), sa.attnum::text, sa.attnotnull]::text[] ORDER BY sa.attnum)
 		FROM pg_attribute sa
@@ -56,6 +57,8 @@ LEFT JOIN pg_index i ON (c.oid = i.indrelid AND i.indisprimary
 AND i.indnatts = 1)
 LEFT JOIN pg_attribute ia ON (ia.attrelid = i.indexrelid)
 LEFT JOIN pg_type it ON (ia.atttypid = it.oid AND it.typname in ('int2', 'int4', 'int8'))
+LEFT JOIN information_schema.columns cols ON (n.nspname = cols.table_schema
+AND c.relname = cols.table_name AND coalesce(ia.attname, '') = cols.column_name)
 WHERE c.relkind IN ('r', 'v', 'm', 'p', 'f')
 AND t.typname IN ('geometry', 'geography')
 AND has_table_privilege(c.oid, 'select')

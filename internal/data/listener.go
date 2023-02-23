@@ -257,7 +257,7 @@ func (listener *listenerDB) addTriggerToTable(tbl *api.Table) {
 }
 
 func (listener *listenerDB) dropTriggers() {
-	log.Debugf("Load table catalog:\n%v", sqlTables)
+	log.Debugf("Drop triggers:\n%v", sqlTables)
 	rows, err := listener.dbconn.Query(context.Background(), sqlTables)
 	if err != nil {
 		log.Fatal(err)
