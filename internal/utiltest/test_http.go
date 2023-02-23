@@ -47,26 +47,24 @@ func MakeHttpTesting(urlBase string, basePath string, assetsPath string, router 
 }
 
 func (hTest *HttpTesting) Setup() {
-	conf.Configuration = conf.Config{
-		Server: conf.Server{
-			HttpHost:   "0.0.0.0",
-			HttpPort:   9000,
-			UrlBase:    hTest.UrlBase,
-			BasePath:   hTest.BasePath,
-			AssetsPath: hTest.AssetsPath,
-			TransformFunctions: []string{
-				"ST_Centroid",
-				"ST_PointOnSurface",
-			},
+	conf.Configuration.Server = conf.Server{
+		HttpHost:   "0.0.0.0",
+		HttpPort:   9000,
+		UrlBase:    hTest.UrlBase,
+		BasePath:   hTest.BasePath,
+		AssetsPath: hTest.AssetsPath,
+		TransformFunctions: []string{
+			"ST_Centroid",
+			"ST_PointOnSurface",
 		},
-		Paging: conf.Paging{
-			LimitDefault: 10,
-			LimitMax:     1000,
-		},
-		Metadata: conf.Metadata{
-			Title:       "test",
-			Description: "test",
-		},
+	}
+	conf.Configuration.Paging = conf.Paging{
+		LimitDefault: 10,
+		LimitMax:     1000,
+	}
+	conf.Configuration.Metadata = conf.Metadata{
+		Title:       "test",
+		Description: "test",
 	}
 }
 
@@ -77,27 +75,27 @@ func (hTest *HttpTesting) ReadBody(resp *httptest.ResponseRecorder) []byte {
 }
 
 // do an http request to url with default method GET and expected status OK
-func (hTest *HttpTesting) DoRequest(t *testing.T, url string) *httptest.ResponseRecorder {
+func (hTest *HttpTesting) DoRequest(t testing.TB, url string) *httptest.ResponseRecorder {
 	return hTest.DoRequestStatus(t, url, http.StatusOK)
 }
 
-func (hTest *HttpTesting) DoPostRequest(t *testing.T, url string, data []byte, header http.Header) *httptest.ResponseRecorder {
+func (hTest *HttpTesting) DoPostRequest(t testing.TB, url string, data []byte, header http.Header) *httptest.ResponseRecorder {
 	return hTest.DoRequestMethodStatus(t, "POST", url, data, header, http.StatusCreated)
 }
 
 // do an http request to url with default method GET and a specific expected status
-func (hTest *HttpTesting) DoRequestStatus(t *testing.T, url string,
+func (hTest *HttpTesting) DoRequestStatus(t testing.TB, url string,
 	statusExpected int) *httptest.ResponseRecorder {
 	return hTest.DoRequestMethodStatus(t, "GET", url, nil, nil, statusExpected)
 }
 
 // do an http request to url with DELETE method and an expected status
-func (hTest *HttpTesting) DoDeleteRequestStatus(t *testing.T, url string, statusExpected int) *httptest.ResponseRecorder {
+func (hTest *HttpTesting) DoDeleteRequestStatus(t testing.TB, url string, statusExpected int) *httptest.ResponseRecorder {
 	return hTest.DoRequestMethodStatus(t, "DELETE", url, nil, nil, statusExpected)
 }
 
 // do an http request to url with a specific method and specific expected status
-func (hTest *HttpTesting) DoRequestMethodStatus(t *testing.T, method string, url string,
+func (hTest *HttpTesting) DoRequestMethodStatus(t testing.TB, method string, url string,
 	data []byte, header http.Header, statusExpected int) *httptest.ResponseRecorder {
 
 	req, err := http.NewRequest(method, hTest.BasePath+url, bytes.NewReader(data))
