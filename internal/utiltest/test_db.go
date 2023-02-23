@@ -169,7 +169,7 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 	createBytes := []byte(`
 		DROP TABLE IF EXISTS %s CASCADE;
 		CREATE TABLE IF NOT EXISTS %s (
-			id SERIAL PRIMARY KEY,
+			id int PRIMARY KEY,
 			geometry public.geometry(Point, 4326) NOT NULL,
 			%s text
 		);
@@ -190,17 +190,17 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 	b := &pgx.Batch{}
 
 	insertBytes := []byte(`
-		INSERT INTO %s (geometry)
-		VALUES (ST_GeomFromGeoJSON($1))
+		INSERT INTO %s (id, geometry)
+		VALUES ($2, ST_GeomFromGeoJSON($1))
 	`)
 	for tableName, tableElements := range tablesAndExtents {
 		tableNameWithSchema := pgx.Identifier{schema, tableName}.Sanitize()
 		insertStatement := fmt.Sprintf(string(insertBytes), tableNameWithSchema)
 		featuresMock := data.MakeFeaturesMockPoint(tableName, tableElements.extent, tableElements.nx, tableElements.ny)
 
-		for _, f := range featuresMock {
+		for i, f := range featuresMock {
 			geomStr, _ := f.Geom.MarshalJSON()
-			b.Queue(insertStatement, geomStr)
+			b.Queue(insertStatement, geomStr, i)
 		}
 		res := db.SendBatch(ctx, b)
 		if res == nil {
@@ -300,7 +300,7 @@ func CloseTestDb(db *pgxpool.Pool) {
 	var sql string
 	cleanedTableNameWithSchema := pgx.Identifier{SpecialSchemaStr, SpecialTableStr}.Sanitize()
 	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi",
-		"complex.mock_ssimple", cleanedTableNameWithSchema} {
+		"public.mock_ssimple", cleanedTableNameWithSchema} {
 		sql = fmt.Sprintf("%s DROP TABLE IF EXISTS %s CASCADE;", sql, t)
 	}
 	_, errExec := db.Exec(context.Background(), sql)

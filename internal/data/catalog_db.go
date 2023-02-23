@@ -295,15 +295,23 @@ func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jso
 	}
 
 	for colName, col := range tbl.DbTypes {
-		if colName == tbl.IDColumn || schemaObject.Props[colName] == nil {
-			continue // ignore id column
+		if (colName == tbl.IDColumn && tbl.IDColHasDefault) || (colName != tbl.IDColumn && schemaObject.Props[colName] == nil) {
+			continue // ignore id column if it has a default value
 		}
 
 		i++
 		columnStr = append(columnStr, colName)
 		placementStr = append(placementStr, fmt.Sprintf("$%d", i))
 
-		convVal, errConv := col.Type.ParseJSONInterface(schemaObject.Props[colName])
+		var convVal interface{}
+		var errConv error
+
+		if colName == tbl.IDColumn {
+			convVal, errConv = schemaObject.ID, nil
+		} else {
+			convVal, errConv = col.Type.ParseJSONInterface(schemaObject.Props[colName])
+		}
+
 		if errConv != nil {
 			return -9999, errConv
 		}
@@ -319,7 +327,6 @@ func (cat *catalogDB) AddTableFeature(ctx context.Context, tableName string, jso
 	placementStr = append(placementStr, geomStr)
 	geomJson, _ := schemaObject.Geom.MarshalJSON()
 	values = append(values, geomJson)
-
 	sqlStatement := fmt.Sprintf(`
 		INSERT INTO %s (%s)
 		VALUES (%s)
@@ -573,11 +580,12 @@ func scanTable(rows pgx.Rows) *api.Table {
 		id, schema, table, description, geometryCol string
 		srid                                        int
 		geometryType, idColumn                      string
+		idColHasDefault                             bool
 		props                                       pgtype.TextArray
 	)
 
 	err := rows.Scan(&id, &schema, &table, &description, &geometryCol,
-		&srid, &geometryType, &idColumn, &props)
+		&srid, &geometryType, &idColumn, &idColHasDefault, &props)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -625,19 +633,20 @@ func scanTable(rows pgx.Rows) *api.Table {
 	}
 
 	return &api.Table{
-		ID:             id,
-		Schema:         schema,
-		Table:          table,
-		Title:          title,
-		Description:    description,
-		GeometryColumn: geometryCol,
-		Srid:           srid,
-		GeometryType:   geometryType,
-		IDColumn:       idColumn,
-		Columns:        columns,
-		DbTypes:        datatypes,
-		JSONTypes:      jsontypes,
-		ColDesc:        colDesc,
+		ID:              id,
+		Schema:          schema,
+		Table:           table,
+		Title:           title,
+		Description:     description,
+		GeometryColumn:  geometryCol,
+		Srid:            srid,
+		GeometryType:    geometryType,
+		IDColumn:        idColumn,
+		Columns:         columns,
+		DbTypes:         datatypes,
+		JSONTypes:       jsontypes,
+		ColDesc:         colDesc,
+		IDColHasDefault: idColHasDefault,
 	}
 }
 
