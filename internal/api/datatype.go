@@ -24,6 +24,7 @@ import (
 
 type PGType string
 type JSONType string
+type GeometryType string
 
 // Constants
 const (
@@ -38,7 +39,6 @@ const (
 	JSONTypeNumberArray  JSONType = "number[]"
 )
 
-// Constants
 const (
 	PGTypeBool         PGType = "bool"
 	PGTypeBoolArray    PGType = "_bool"
@@ -63,6 +63,15 @@ const (
 	PGTypeTSVECTOR     PGType = "tsvector"
 	PGTypeVarChar      PGType = "varchar"
 	PGTypeVarCharArray PGType = "_varchar"
+)
+
+const (
+	GeometryTypePoint           = "Point"
+	GeometryTypeMultiPoint      = "MultiPoint"
+	GeometryTypeLineString      = "LineString"
+	GeometryTypeMultiLineString = "MultiLineString"
+	GeometryTypePolygon         = "Polygon"
+	GeometryTypeMultiPolygon    = "MultiPolygon"
 )
 
 // returns JSONType matching PGType

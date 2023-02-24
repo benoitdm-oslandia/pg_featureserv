@@ -18,7 +18,7 @@ See also our companion project [`pg_tileserv`](https://github.com/CrunchyData/pg
 * Implements the [*OGC API - Features*](https://ogcapi.ogc.org/features/) standard.
   * Standard query parameters: `limit`, `bbox`, `bbox-crs`, property filtering, `sortby`, `crs`
   * Query parameters `filter` and `filter-crs` allow [CQL filtering](https://portal.ogc.org/files/96288), with spatial support
-  * Extended query parameters: `offset`, `properties`, `transform`, `precision`, `groupby`
+  * Extended query parameters: `offset`, `properties`, `transform`, `precision`, `groupby`, `max-allowable-offset`
 * Data responses are formatted in JSON and [GeoJSON](https://www.rfc-editor.org/rfc/rfc7946.txt)
 * Provides a simple HTML user interface, with web maps to view spatial data
 * Uses the power of PostgreSQL to reduce the amount of code
@@ -28,6 +28,7 @@ See also our companion project [`pg_tileserv`](https://github.com/CrunchyData/pg
 * Uses PostGIS to provide geospatial functionality:
   * Spatial filtering
   * Transforming geometry data into the output coordinate system
+  * Providing geometry simplification capability
   * Marshalling feature data into GeoJSON
 * Full-featured HTTP support
   * CORS support with configurable Allowed Origins
