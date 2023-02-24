@@ -82,3 +82,16 @@ http://localhost:9001/collections/ne.countries/items/55.html
 ?properties=gid,name,continent
 ```
 ![Map view of query for feature by ID](/ex-query-data-countries-feature.png)
+
+## Query Features with geometry simplification
+
+When simplifying the returned geometries is needed, you can query one or several features using the `max-allowable-offset` parameter.
+
+This parameter value is interpreted in the unit which corresponds to the output coordinate system.
+The simplification operation is done using the Douglas-Peucker algorithm.
+
+```
+http://localhost:9001/collections/ne.countries/items/55
+?max-allowable-offset=0.1
+```
+
