@@ -500,6 +500,23 @@ func GetOpenAPIContent(urlBase string) *openapi3.T {
 			AllowEmptyValue: false,
 		},
 	}
+	paramMaxAllowableOffset := openapi3.ParameterRef{
+		Value: &openapi3.Parameter{
+			Name:        "max-allowable-offset",
+			Description: "Tolerance to apply for geometry simplification on returned feature(s).",
+			In:          "query",
+			Required:    false,
+			Schema: &openapi3.SchemaRef{
+				Value: &openapi3.Schema{
+					Type:    "integer",
+					Min:     openapi3.Float64Ptr(0),
+					Max:     openapi3.Float64Ptr(float64(conf.Configuration.Paging.LimitMax)),
+					Default: conf.Configuration.Paging.LimitDefault,
+				},
+			},
+			AllowEmptyValue: false,
+		},
+	}
 	paramOffset := openapi3.ParameterRef{
 		Value: &openapi3.Parameter{
 			Name:        "offset",
@@ -710,6 +727,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.T {
 						&paramCrs,
 						&paramLimit,
 						&paramOffset,
+						&paramMaxAllowableOffset,
 						/* TODO
 						&openapi3.ParameterRef{
 							Value: &openapi3.Parameter{
@@ -808,6 +826,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.T {
 						&paramProperties,
 						&paramTransform,
 						&paramCrs,
+						&paramMaxAllowableOffset,
 					},
 					Responses: openapi3.Responses{
 						"200": &openapi3.ResponseRef{
