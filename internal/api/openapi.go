@@ -508,7 +508,7 @@ func GetOpenAPIContent(urlBase string) *openapi3.T {
 			Required:    false,
 			Schema: &openapi3.SchemaRef{
 				Value: &openapi3.Schema{
-					Type:    "integer",
+					Type:    "number",
 					Min:     openapi3.Float64Ptr(0),
 					Max:     openapi3.Float64Ptr(float64(conf.Configuration.Paging.LimitMax)),
 					Default: conf.Configuration.Paging.LimitDefault,
