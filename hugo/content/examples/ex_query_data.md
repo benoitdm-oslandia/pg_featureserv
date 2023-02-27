@@ -94,4 +94,3 @@ The simplification operation is done using the Douglas-Peucker algorithm.
 http://localhost:9001/collections/ne.countries/items/55
 ?max-allowable-offset=0.1
 ```
-

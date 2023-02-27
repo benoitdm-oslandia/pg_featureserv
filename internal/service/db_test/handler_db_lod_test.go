@@ -65,8 +65,8 @@ func (t *DbTests) TestGeometrySimplificationSeveralFeatures() {
 // Test case with negative value as simplification factor
 func (t *DbTests) TestGeometrySimplificationNegativeValue() {
 	t.Test.Run("TestGeometrySimplificationNegativeValue", func(t *testing.T) {
-		path := "/collections/mock_poly/items/6?max-allowable-offset=-0.01"
-		// If lower thant minVal, then minValue (0) is considered
+		path := "/collections/mock_poly/items/1?max-allowable-offset=-0.01"
+		// If lower than minVal, then minValue (0) is considered
 		hTest.DoRequestMethodStatus(t, "GET", path, nil, nil, http.StatusOK)
 	})
 }
@@ -82,7 +82,7 @@ func (t *DbTests) TestGeometrySimplificationWrongFloatSeparatorValue() {
 // Test case with various values as simplification factor
 func (t *DbTests) TestGeometrySimplificationVariousSimplificationValues() {
 	t.Test.Run("TestGeometrySimplificationVariousSimplificationValues", func(t *testing.T) {
-		path := "/collections/mock_poly/items/4?max-allowable-offset=0.01"
+		path := "/collections/mock_poly/items/1?max-allowable-offset=0.01"
 		rr := hTest.DoRequestMethodStatus(t, "GET", path, nil, nil, http.StatusOK)
 		// Feature collection
 		var feat api.GeojsonFeatureData
@@ -90,13 +90,13 @@ func (t *DbTests) TestGeometrySimplificationVariousSimplificationValues() {
 		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
 		util.Equals(t, 4, len(feat.Geom.Geometry().(orb.Polygon)[0]), "wrong number of simplified coordinates")
 
-		path = "/collections/mock_poly/items/4?max-allowable-offset=0.001"
+		path = "/collections/mock_poly/items/1?max-allowable-offset=0.001"
 		rr = hTest.DoRequestMethodStatus(t, "GET", path, nil, nil, http.StatusOK)
 		errUnMarsh = json.Unmarshal(hTest.ReadBody(rr), &feat)
 		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
 		util.Equals(t, 10, len(feat.Geom.Geometry().(orb.Polygon)[0]), "wrong number of simplified coordinates")
 
-		path = "/collections/mock_poly/items/4?max-allowable-offset=1"
+		path = "/collections/mock_poly/items/1?max-allowable-offset=1"
 		rr = hTest.DoRequestMethodStatus(t, "GET", path, nil, nil, http.StatusOK)
 		errUnMarsh = json.Unmarshal(hTest.ReadBody(rr), &feat)
 		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
