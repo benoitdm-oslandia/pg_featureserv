@@ -88,7 +88,7 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 
 	// collections tables
 	type tableContent struct {
-		geometryType string
+		geometryType api.GeometryType
 		extent       api.Extent
 		nx           int
 		ny           int
