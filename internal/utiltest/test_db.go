@@ -33,9 +33,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const SpecialSchemaStr = `"😀.$^{schema}"`
-const SpecialTableStr = `"😀.$^{table}"`
-const SpecialColumnStr = `"😀.$^{column}"`
+const SpecialSchemaStr = `"😀.$^{schema}.👿.😱"`
+const SpecialTableStr = `"😀.$^{table}.👿.😱"`
+const SpecialColumnStr = `"😀.$^{column}.👿.😱"`
 
 func CreateTestDb() *pgxpool.Pool {
 	dbURL := os.Getenv(conf.AppConfig.EnvDBURL)
