@@ -170,12 +170,12 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 			geometry public.geometry(Point, 4326) NOT NULL,
 			%s text
 		);
-		CREATE INDEX %s_geometry_idx ON %s USING GIST (geometry);
+		CREATE INDEX geometry_idx ON %s USING GIST (geometry);
 	`)
 	for s := range tablesAndExtents {
 
 		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
-		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, SpecialColumnStr)
+		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, SpecialColumnStr, tableNameWithSchema)
 
 		_, errExec := db.Exec(ctx, createStatement)
 		if errExec != nil {
