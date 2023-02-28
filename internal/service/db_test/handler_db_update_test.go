@@ -27,6 +27,7 @@ import (
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/jackc/pgx/v4"
 )
 
 func (t *DbTests) TestUpdateSimpleFeatureDb() {
@@ -203,7 +204,8 @@ func (t *DbTests) TesUpdateComplexFeatureDbWrongCrs() {
 
 func (t *DbTests) TestSpecialSchemaTableColumnName() {
 	t.Test.Run("TestSpecialSchemaTableColumnName", func(t *testing.T) {
-		path := url.QueryEscape(fmt.Sprintf(`/collections/%s.%s/items/3`, util.SpecialSchemaStr, util.SpecialTableStr))
+		cleanedTableNameWithSchema := pgx.Identifier{util.SpecialSchemaStr, util.SpecialTableStr}.Sanitize()
+		path := url.QueryEscape(fmt.Sprintf(`/collections/%s/items/3`, cleanedTableNameWithSchema))
 		var header = make(http.Header)
 		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
 
@@ -221,7 +223,7 @@ func (t *DbTests) TestSpecialSchemaTableColumnName() {
 		_ = hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusNoContent)
 
 		// check if it can be read
-		feature := checkItem(t, fmt.Sprintf(`%s.%s`, util.SpecialSchemaStr, util.SpecialTableStr), 3)
+		feature := checkItem(t, cleanedTableNameWithSchema, 3)
 		var jsonData map[string]interface{}
 		errUnMarsh := json.Unmarshal(feature, &jsonData)
 		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
