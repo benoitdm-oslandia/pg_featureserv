@@ -164,10 +164,10 @@ func TestRunnerHandlerDb(t *testing.T) {
 		afterEachRun()
 	})
 
-	t.Run("COMPLEX_SCHEMA", func(t *testing.T) {
+	t.Run("SPECIAL_SCHEMA_TABLE_COLUMN", func(t *testing.T) {
 		beforeEachRun()
 		test := DbTests{Test: t}
-		test.TestUpdateComplexSchemaName()
+		test.TestSpecialSchemaTableColumnName()
 		afterEachRun()
 	})
 

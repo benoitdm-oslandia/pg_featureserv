@@ -46,7 +46,7 @@ type listenerDB struct {
 // event on the databases included in pg_featureserv. It is populated using the return value of
 // the pl/pgSQL procedure named `sqlNotifyFunction` defined in db_sql.go
 type eventNotification struct {
-	Id       string
+	Id       string                 // Identifier of table in form schema.table_name with quoted values if needed
 	Schema   string                 // schema of the table triggering the event
 	Table    string                 // name of the table triggering the event
 	Action   string                 // action triggering the event (INSERT, UPDATE or DELETE)
@@ -57,7 +57,7 @@ type eventNotification struct {
 
 // toString for eventNotification
 func (e eventNotification) String() string {
-	return fmt.Sprintf("eventNotification[table: '%v.%v', action: '%v', xmin: %v/%v, data: %v]", e.Schema, e.Table, e.Action, e.Old_xmin, e.New_xmin, e.Data)
+	return fmt.Sprintf("eventNotification[Id: %v, table: '%v.%v', action: '%v', xmin: %v/%v, data: %v]", e.Id, e.Schema, e.Table, e.Action, e.Old_xmin, e.New_xmin, e.Data)
 }
 
 // creates new db listener

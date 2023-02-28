@@ -201,8 +201,8 @@ func (t *DbTests) TesUpdateComplexFeatureDbWrongCrs() {
 	})
 }
 
-func (t *DbTests) TestUpdateComplexSchemaName() {
-	t.Test.Run("TestUpdateComplexSchemaName", func(t *testing.T) {
+func (t *DbTests) TestSpecialSchemaTableColumnName() {
+	t.Test.Run("TestSpecialSchemaTableColumnName", func(t *testing.T) {
 		path := url.QueryEscape(fmt.Sprintf(`/collections/%s.%s/items/3`, util.SpecialSchemaStr, util.SpecialTableStr))
 		var header = make(http.Header)
 		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
