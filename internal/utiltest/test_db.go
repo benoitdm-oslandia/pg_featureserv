@@ -35,6 +35,7 @@ import (
 
 const SpecialSchemaStr = `"😀.$^{schema}"`
 const SpecialTableStr = `"😀.$^{table}"`
+const SpecialColumnStr = `"😀.$^{column}"`
 
 func CreateTestDb() *pgxpool.Pool {
 	dbURL := os.Getenv(conf.AppConfig.EnvDBURL)
@@ -166,14 +167,15 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 		DROP TABLE IF EXISTS %s CASCADE;
 		CREATE TABLE IF NOT EXISTS %s (
 			id SERIAL PRIMARY KEY,
-			geometry public.geometry(Point, 4326) NOT NULL
+			geometry public.geometry(Point, 4326) NOT NULL,
+			%s text
 		);
 		CREATE INDEX %s_geometry_idx ON %s USING GIST (geometry);
 	`)
 	for s := range tablesAndExtents {
 
 		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
-		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, s, tableNameWithSchema)
+		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, SpecialColumnStr)
 
 		_, errExec := db.Exec(ctx, createStatement)
 		if errExec != nil {

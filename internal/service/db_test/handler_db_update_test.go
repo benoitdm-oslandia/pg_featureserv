@@ -233,5 +233,8 @@ func (t *DbTests) TestUpdateComplexSchemaName() {
 		coordinate := geom["coordinates"].([]interface{})
 		util.Equals(t, -120, int(coordinate[0].(float64)), "feature latitude")
 		util.Equals(t, 40, int(coordinate[1].(float64)), "feature longitude")
+
+		props := jsonData["properties"].(map[string]interface{})
+		util.Equals(t, nil, props[util.SpecialColumnStr], fmt.Sprintf("feature value %s", util.SpecialColumnStr))
 	})
 }
