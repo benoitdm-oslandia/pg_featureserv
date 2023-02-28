@@ -34,6 +34,7 @@ import (
 )
 
 const SpecialSchemaStr = `"😀.$^{schema}"`
+const SpecialTableStr = `"😀.$^{table}"`
 
 func CreateTestDb() *pgxpool.Pool {
 	dbURL := os.Getenv(conf.AppConfig.EnvDBURL)
@@ -62,9 +63,9 @@ func CreateTestDb() *pgxpool.Pool {
 	CreateSchema(db, "complex")
 	CreateSchema(db, SpecialSchemaStr)
 	InsertSimpleDataset(db, "public")
-	InsertSuperSimpleDataset(db, "public")
+	InsertSuperSimpleDataset(db, "public", "mock_ssimple")
 	InsertComplexDataset(db, "complex")
-	InsertSuperSimpleDataset(db, SpecialSchemaStr)
+	InsertSuperSimpleDataset(db, SpecialSchemaStr, SpecialTableStr)
 
 	log.Debugf("Sample data injected")
 
@@ -148,7 +149,7 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 	}
 }
 
-func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string) {
+func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string) {
 	ctx := context.Background()
 	// collections tables
 	// tables := []string{"mock_a", "mock_b", "mock_c"}
@@ -158,7 +159,7 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string) {
 		ny     int
 	}
 	tablesAndExtents := map[string]tableContent{
-		"mock_ssimple": {api.Extent{Minx: -120, Miny: 40, Maxx: -74, Maxy: 50}, 3, 3},
+		tablename: {api.Extent{Minx: -120, Miny: 40, Maxx: -74, Maxy: 50}, 3, 3},
 	}
 
 	createBytes := []byte(`
@@ -167,12 +168,12 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string) {
 			id SERIAL PRIMARY KEY,
 			geometry public.geometry(Point, 4326) NOT NULL
 		);
-		CREATE INDEX %s_geometry_idx ON %s USING GIST (geometry);
+		CREATE INDEX geometry_idx ON %s USING GIST (geometry);
 	`)
 	for s := range tablesAndExtents {
 
 		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
-		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, s, tableNameWithSchema)
+		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, tableNameWithSchema)
 
 		_, errExec := db.Exec(ctx, createStatement)
 		if errExec != nil {
@@ -291,7 +292,7 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 func CloseTestDb(db *pgxpool.Pool) {
 	log.Debugf("Sample dbs will be cleared...")
 	var sql string
-	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi", fmt.Sprintf(`%s.mock_ssimple`, SpecialSchemaStr)} {
+	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi", fmt.Sprintf(`%s.%s`, SpecialSchemaStr, SpecialTableStr)} {
 		sql = fmt.Sprintf("%s DROP TABLE IF EXISTS %s CASCADE;", sql, t)
 	}
 	_, errExec := db.Exec(context.Background(), sql)
