@@ -203,7 +203,7 @@ func (t *DbTests) TesUpdateComplexFeatureDbWrongCrs() {
 
 func (t *DbTests) TestUpdateComplexSchemaName() {
 	t.Test.Run("TestUpdateComplexSchemaName", func(t *testing.T) {
-		path := url.QueryEscape(fmt.Sprintf(`/collections/%s.mock_ssimple/items/3`, util.SpecialSchemaStr))
+		path := url.QueryEscape(fmt.Sprintf(`/collections/%s.%s/items/3`, util.SpecialSchemaStr, util.SpecialTableStr))
 		var header = make(http.Header)
 		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
 
@@ -221,7 +221,7 @@ func (t *DbTests) TestUpdateComplexSchemaName() {
 		_ = hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusNoContent)
 
 		// check if it can be read
-		feature := checkItem(t, fmt.Sprintf(`%s.mock_ssimple`, util.SpecialSchemaStr), 3)
+		feature := checkItem(t, fmt.Sprintf(`%s.%s`, util.SpecialSchemaStr, util.SpecialTableStr), 3)
 		var jsonData map[string]interface{}
 		errUnMarsh := json.Unmarshal(feature, &jsonData)
 		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
