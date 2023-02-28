@@ -292,7 +292,7 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 func CloseTestDb(db *pgxpool.Pool) {
 	log.Debugf("Sample dbs will be cleared...")
 	var sql string
-	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi", fmt.Sprintf(`%s.mock_ssimple`, SpecialSchemaStr)} {
+	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi", fmt.Sprintf(`%s.%s`, SpecialSchemaStr, SpecialTableStr)} {
 		sql = fmt.Sprintf("%s DROP TABLE IF EXISTS %s CASCADE;", sql, t)
 	}
 	_, errExec := db.Exec(context.Background(), sql)
