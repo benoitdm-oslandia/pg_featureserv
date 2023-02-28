@@ -33,9 +33,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const SpecialSchemaStr = `"😀.$^{schema}.👿.😱"`
-const SpecialTableStr = `"😀.$^{table}.👿.😱"`
-const SpecialColumnStr = `"😀.$^{column}.👿.😱"`
+const SpecialSchemaStr = `😀.$^{schema}.👿.😱`
+const SpecialTableStr = `😀.$^{table}.👿.😱`
+const SpecialColumnStr = `😀.$^{column}.👿.😱`
 
 func CreateTestDb() *pgxpool.Pool {
 	dbURL := os.Getenv(conf.AppConfig.EnvDBURL)
@@ -75,7 +75,8 @@ func CreateTestDb() *pgxpool.Pool {
 
 func CreateSchema(db *pgxpool.Pool, schema string) {
 	ctx := context.Background()
-	_, errExec := db.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s;`, schema))
+	cleanedSchema := pgx.Identifier{schema}.Sanitize()
+	_, errExec := db.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s;`, cleanedSchema))
 	if errExec != nil {
 		CloseTestDb(db)
 		log.Fatal(errExec)
@@ -109,9 +110,9 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 		);
 		CREATE INDEX %s_geometry_idx ON %s USING GIST (geometry);
 	`)
-	for s := range tablesAndExtents {
 
-		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
+	for s := range tablesAndExtents {
+		tableNameWithSchema := pgx.Identifier{schema, s}.Sanitize()
 		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, s, tableNameWithSchema)
 
 		_, errExec := db.Exec(ctx, createStatement)
@@ -129,7 +130,7 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5)
 	`)
 	for tableName, tableElements := range tablesAndExtents {
-		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, tableName)
+		tableNameWithSchema := pgx.Identifier{schema, tableName}.Sanitize()
 		insertStatement := fmt.Sprintf(string(insertBytes), tableNameWithSchema)
 		featuresMock := data.MakeFeaturesMockPoint(tableName, tableElements.extent, tableElements.nx, tableElements.ny)
 
@@ -163,6 +164,8 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 		tablename: {api.Extent{Minx: -120, Miny: 40, Maxx: -74, Maxy: 50}, 3, 3},
 	}
 
+	cleanedColumn := pgx.Identifier{SpecialColumnStr}.Sanitize()
+
 	createBytes := []byte(`
 		DROP TABLE IF EXISTS %s CASCADE;
 		CREATE TABLE IF NOT EXISTS %s (
@@ -173,9 +176,8 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 		CREATE INDEX geometry_idx ON %s USING GIST (geometry);
 	`)
 	for s := range tablesAndExtents {
-
-		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, s)
-		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, SpecialColumnStr, tableNameWithSchema)
+		tableNameWithSchema := pgx.Identifier{schema, s}.Sanitize()
+		createStatement := fmt.Sprintf(string(createBytes), tableNameWithSchema, tableNameWithSchema, cleanedColumn, tableNameWithSchema)
 
 		_, errExec := db.Exec(ctx, createStatement)
 		if errExec != nil {
@@ -192,7 +194,7 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 		VALUES (ST_GeomFromGeoJSON($1))
 	`)
 	for tableName, tableElements := range tablesAndExtents {
-		tableNameWithSchema := fmt.Sprintf("%s.%s", schema, tableName)
+		tableNameWithSchema := pgx.Identifier{schema, tableName}.Sanitize()
 		insertStatement := fmt.Sprintf(string(insertBytes), tableNameWithSchema)
 		featuresMock := data.MakeFeaturesMockPoint(tableName, tableElements.extent, tableElements.nx, tableElements.ny)
 
@@ -235,6 +237,8 @@ func MakeGeojsonFeatureMockPoint(id int, x float64, y float64) *api.GeojsonFeatu
 
 func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 	ctx := context.Background()
+	cleanedSchema := pgx.Identifier{schema}.Sanitize()
+
 	// NOT same as featureMock
 	// TODO: mark all props as required with NOT NULL contraint?
 	_, errExec := db.Exec(ctx, fmt.Sprintf(`
@@ -253,7 +257,7 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 			prop_v varchar NOT NULL
 		);
 		CREATE INDEX mock_multi_geometry_idx ON %s.mock_multi USING GIST (geometry);
-		`, schema, schema, schema))
+		`, cleanedSchema, cleanedSchema, cleanedSchema))
 	if errExec != nil {
 		CloseTestDb(db)
 		log.Fatal(errExec)
@@ -273,7 +277,7 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 	b := &pgx.Batch{}
 	sqlStatement := fmt.Sprintf(`
 		INSERT INTO %s.mock_multi (geometry, prop_t, prop_i, prop_l, prop_f, prop_r, prop_b, prop_d, prop_j, prop_v)
-		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5, $6, $7, $8, $9, $10)`, schema)
+		VALUES (ST_GeomFromGeoJSON($1), $2, $3, $4, $5, $6, $7, $8, $9, $10)`, cleanedSchema)
 
 	for _, f := range features {
 		geomStr, _ := f.Geom.MarshalJSON()
@@ -294,7 +298,9 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 func CloseTestDb(db *pgxpool.Pool) {
 	log.Debugf("Sample dbs will be cleared...")
 	var sql string
-	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi", fmt.Sprintf(`%s.%s`, SpecialSchemaStr, SpecialTableStr)} {
+	cleanedTableNameWithSchema := pgx.Identifier{SpecialSchemaStr, SpecialTableStr}.Sanitize()
+	for _, t := range []string{"public.mock_a", "public.mock_b", "public.mock_c", "complex.mock_multi",
+		"complex.mock_ssimple", cleanedTableNameWithSchema} {
 		sql = fmt.Sprintf("%s DROP TABLE IF EXISTS %s CASCADE;", sql, t)
 	}
 	_, errExec := db.Exec(context.Background(), sql)
