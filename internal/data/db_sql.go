@@ -107,40 +107,54 @@ JOIN proargarrays aa ON (p.oid = aa.oid)
 LEFT JOIN pg_description d ON (p.oid = d.objoid)
 ORDER BY id`
 
+// ========= solution to avoid "Payload string too long"
+// ========= https://github.com/meteor/postgres-packages/issues/56
 const sqlNotifyFunction = `CREATE OR REPLACE FUNCTION %s.notify_event() RETURNS TRIGGER AS $$
 DECLARE
-		data json;
+		data text;
 		notification json;
 		new_xmin text;
 		old_xmin text;
 		id text;
+		full_len int;
+		page_count int;
+		cur_page int;
+		msg_hash text;
 BEGIN
 		IF (TG_OP = 'DELETE') THEN
-			data = row_to_json(OLD);
+			data = row_to_json(OLD)::TEXT;
 			old_xmin = OLD.xmin::text;
 			new_xmin = NULL;
 		ELSIF (TG_OP = 'INSERT') THEN
-			data = row_to_json(NEW);
+			data = row_to_json(NEW)::TEXT;
 			old_xmin = NULL;
 			new_xmin = NEW.xmin::text;
 		ELSIF (TG_OP = 'UPDATE') THEN
-			data = row_to_json(NEW);
+			data = row_to_json(NEW)::TEXT;
 			old_xmin = OLD.xmin::text;
 			new_xmin = NEW.xmin::text;
 		END IF;
 
 		id := Format('%%I.%%I', TG_TABLE_SCHEMA, TG_TABLE_NAME);
 
+		full_len := char_length(data);
+		page_count := (full_len / 7500) + 1;
+		msg_hash := md5(data);
+
 		-- Contruct the notification as a JSON string.
-		notification = json_build_object(
+		FOR cur_page IN 1..page_count LOOP
+			notification = json_build_object(
 						'id', id,
 						'schema',TG_TABLE_SCHEMA,
 						'table',TG_TABLE_NAME,
 						'action', TG_OP,
 						'old_xmin', old_xmin,
 						'new_xmin', new_xmin,
-						'data', data);
-		PERFORM pg_notify('table_update', notification::text);
+						'md5', msg_hash,
+						'rawdata', page_count || ':' || cur_page || ':'
+						  || substr(data, ((cur_page - 1) * 7500) + 1, 7500));
+			PERFORM pg_notify('table_update', notification::text);
+		END LOOP;
 		RETURN NULL;
 END;
 
