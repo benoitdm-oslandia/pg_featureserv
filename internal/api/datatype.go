@@ -19,6 +19,8 @@ package api
 import (
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -55,7 +57,10 @@ const (
 	PGTypeFloat8       PGType = "float8"
 	PGTypeFloat8Array  PGType = "_float8"
 	PGTypeNumeric      PGType = "numeric"
+	PGTypeNumericArray PGType = "_numeric"
 	PGTypeDate         PGType = "date"
+	PGTypeTimeStamp    PGType = "timestamp"
+	PGTypeTimeStampTZ  PGType = "timestamptz"
 	PGTypeJSON         PGType = "json"
 	PGTypeGeometry     PGType = "geometry"
 	PGTypeText         PGType = "text"
@@ -80,7 +85,7 @@ func (dbType PGType) ToJSONType() JSONType {
 	switch dbType {
 	case PGTypeNumeric, PGTypeInt, PGTypeInt4, PGTypeInt8, PGTypeBigInt, PGTypeFloat4, PGTypeFloat8:
 		return JSONTypeNumber
-	case PGTypeIntArray, PGTypeInt4Array, PGTypeInt8Array, PGTypeBigIntArray, PGTypeFloat4Array, PGTypeFloat8Array:
+	case PGTypeNumericArray, PGTypeIntArray, PGTypeInt4Array, PGTypeInt8Array, PGTypeBigIntArray, PGTypeFloat4Array, PGTypeFloat8Array:
 		return JSONTypeNumberArray
 	case PGTypeBool:
 		return JSONTypeBoolean
@@ -90,7 +95,7 @@ func (dbType PGType) ToJSONType() JSONType {
 		return JSONTypeJSON
 	case PGTypeTextArray, PGTypeVarCharArray:
 		return JSONTypeStringArray
-	case PGTypeDate:
+	case PGTypeDate, PGTypeTimeStamp, PGTypeTimeStampTZ:
 		return JSONTypeDate
 		// hack to allow displaying geometry type
 	case PGTypeGeometry:
@@ -112,19 +117,19 @@ func (dbType PGType) ToOpenApiSchema() *openapi3.Schema {
 	case PGTypeInt, PGTypeInt4, PGTypeInt8, PGTypeBigInt:
 		return &openapi3.Schema{Type: "integer"}
 
-	case PGTypeFloat4, PGTypeFloat8:
+	case PGTypeFloat4, PGTypeFloat8, PGTypeNumeric:
 		return &openapi3.Schema{Type: "number"}
 
 	case PGTypeText, PGTypeVarChar:
 		return &openapi3.Schema{Type: "string"}
 
-	case PGTypeDate:
+	case PGTypeDate, PGTypeTimeStamp, PGTypeTimeStampTZ:
 		return &openapi3.Schema{Type: "string"}
 
 	case PGTypeGeometry, PGTypeJSON:
 		return &openapi3.Schema{Type: "object"}
 
-	case PGTypeIntArray, PGTypeInt4Array, PGTypeInt8Array, PGTypeBigIntArray, PGTypeFloat4Array, PGTypeFloat8Array, PGTypeTextArray, PGTypeVarCharArray, PGTypeBoolArray:
+	case PGTypeIntArray, PGTypeInt4Array, PGTypeInt8Array, PGTypeBigIntArray, PGTypeFloat4Array, PGTypeFloat8Array, PGTypeTextArray, PGTypeVarCharArray, PGTypeBoolArray, PGTypeNumericArray:
 		var subPropType string
 
 		switch dbType {
@@ -132,11 +137,12 @@ func (dbType PGType) ToOpenApiSchema() *openapi3.Schema {
 			subPropType = "boolean"
 		case PGTypeIntArray, PGTypeInt4Array, PGTypeInt8Array, PGTypeBigIntArray:
 			subPropType = "integer"
-		case PGTypeFloat4Array, PGTypeFloat8Array:
+		case PGTypeFloat4Array, PGTypeFloat8Array, PGTypeNumeric:
 			subPropType = "number"
 		case PGTypeTextArray, PGTypeVarChar:
 			subPropType = "string"
 		default:
+			log.Warnf("ToOpenApiSchema: unknown sub-type: '%v'", string(dbType))
 			subPropType = string(dbType)
 		}
 
@@ -150,6 +156,7 @@ func (dbType PGType) ToOpenApiSchema() *openapi3.Schema {
 		}
 
 	default:
+		log.Warnf("ToOpenApiSchema: unknown type: '%v'", string(dbType))
 		return &openapi3.Schema{Type: string(dbType)}
 	}
 }
