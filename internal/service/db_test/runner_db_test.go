@@ -145,6 +145,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestCacheSizeIncreaseAfterCreateComplex()
 		test.TestCacheSizeDecreaseAfterDelete()
 		test.TestCacheModifiedAfterUpdate()
+		test.TestMultipleNotificationAfterCreate()
 		afterEachRun()
 	})
 	t.Run("HEADER-IF-NON-MATCH", func(t *testing.T) {

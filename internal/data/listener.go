@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/jackc/pgconn"
@@ -40,24 +42,26 @@ type listenerDB struct {
 	tableExcludes map[string]string  // list of excluded tables
 	cache         Cacher             // cache of the catalog
 	stopListen    context.CancelFunc // channel used to stop the listen goroutine
+	notifications map[string]eventNotification
 }
 
 // An eventNotification is a notification sent by the database after a INSERT, UPDATE or DELETE
 // event on the databases included in pg_featureserv. It is populated using the return value of
 // the pl/pgSQL procedure named `sqlNotifyFunction` defined in db_sql.go
 type eventNotification struct {
-	Id       string                 // Identifier of table in form schema.table_name with quoted values if needed
-	Schema   string                 // schema of the table triggering the event
-	Table    string                 // name of the table triggering the event
-	Action   string                 // action triggering the event (INSERT, UPDATE or DELETE)
-	Old_xmin string                 // xmin of the previous version of the row (`nil` in case of INSERT)
-	New_xmin string                 // xmin of the new version of the row (`nil` in case of INSERT)
-	Data     map[string]interface{} // data contained in the row
+	Id       string // Identifier of table in form schema.table_name with quoted values if needed
+	Schema   string // schema of the table triggering the event
+	Table    string // name of the table triggering the event
+	Action   string // action triggering the event (INSERT, UPDATE or DELETE)
+	Old_xmin string // xmin of the previous version of the row (`nil` in case of INSERT)
+	New_xmin string // xmin of the new version of the row (`nil` in case of INSERT)
+	Md5      string
+	RawData  string
 }
 
 // toString for eventNotification
 func (e eventNotification) String() string {
-	return fmt.Sprintf("eventNotification[Id: %v, table: '%v.%v', action: '%v', xmin: %v/%v, data: %v]", e.Id, e.Schema, e.Table, e.Action, e.Old_xmin, e.New_xmin, e.Data)
+	return fmt.Sprintf("eventNotification[Id: %v, table: '%v.%v', action: '%v', xmin: %v/%v, data: %v]", e.Id, e.Schema, e.Table, e.Action, e.Old_xmin, e.New_xmin, e.RawData)
 }
 
 // creates new db listener
@@ -79,6 +83,7 @@ func newListenerDB(conn *pgxpool.Pool, cache Cacher) *listenerDB {
 func (listener *listenerDB) Initialize(tableIncludes map[string]string, tableExcludes map[string]string) {
 	listener.tableIncludes = tableIncludes
 	listener.tableExcludes = tableExcludes
+	listener.notifications = make(map[string]eventNotification)
 
 	ctx := context.Background()
 	ctxGoroutine, stopListen := context.WithCancel(ctx)
@@ -136,10 +141,48 @@ func (listener *listenerDB) listenOneNotification(ctx context.Context) {
 		log.Fatal(errUnMarsh)
 	}
 
-	log.Debugf("Listener received notification: %v, cache: %v", notificationData, listener.cache)
+	// split raw data:
+	re := regexp.MustCompile(`^([0-9]+):([0-9]+):(.*)$`)
+	rawArray := re.FindStringSubmatch(notificationData.RawData)
+	pgCountStr := rawArray[1]
+	pgCurrStr := rawArray[2]
+	data := rawArray[3]
+
+	notif, exists := listener.notifications[notificationData.Md5]
+	if exists {
+		notif.RawData = notif.RawData + data
+		listener.notifications[notificationData.Md5] = notif
+	} else {
+		notificationData.RawData = data
+		listener.notifications[notificationData.Md5] = notificationData
+	}
+	pgCount, _ := strconv.Atoi(pgCountStr)
+	pgCurr, _ := strconv.Atoi(pgCurrStr)
+
+	log.Debugf("Listener received notification part (md5:%v), page:%v/%v", notificationData.Md5, pgCurr, pgCount)
+
+	// check if all pages has been received
+	if pgCount == pgCurr {
+		listener.handleCompleteNotification(notificationData.Md5)
+	}
+}
+
+func (listener *listenerDB) handleCompleteNotification(md5 string) {
+	notificationData := listener.notifications[md5]
+	delete(listener.notifications, md5)
+
+	log.Debugf("Listener received complete notification (md5:%v): %v, cache: %v", notificationData.Md5, notificationData, listener.cache)
+
+	var data map[string]interface{} // data contained in the row
+
+	errUnMarsh := json.Unmarshal([]byte(notificationData.RawData), &data)
+	if errUnMarsh != nil {
+		log.Fatal(errUnMarsh)
+	}
+
 	if notificationData.Action == "DELETE" || notificationData.Action == "UPDATE" {
 		weakEtag := api.MakeWeakEtag("", "", notificationData.Old_xmin, "")
-		_, err = listener.cache.RemoveWeakEtag(weakEtag.CacheKey())
+		_, err := listener.cache.RemoveWeakEtag(weakEtag.CacheKey())
 		if err != nil {
 			log.Warnf("Error removing weak Etag to cache: %v", err)
 		}
@@ -154,23 +197,29 @@ func (listener *listenerDB) listenOneNotification(ctx context.Context) {
 		} else {
 			// ==== retrieve the id
 			var id string
-			switch table.DbTypes[table.IDColumn].Type {
-			case api.PGTypeText, api.PGTypeVarChar:
-				id = notificationData.Data[table.IDColumn].(string)
-			case api.PGTypeFloat8, api.PGTypeFloat4, api.PGTypeInt, api.PGTypeInt4, api.PGTypeInt8:
-				id = fmt.Sprintf("%f", notificationData.Data[table.IDColumn].(float64))
-			default:
-				log.Warnf("Listener received notification about table '%v' with unhandled id '%v' of type '%v'.",
-					collection, table.IDColumn, table.DbTypes[table.IDColumn].Type)
+			if data[table.IDColumn] == nil {
+				log.Warnf("Listener received notification about table '%v' without id! Expected id type: '%v'.",
+					collection, table.DbTypes[table.IDColumn].Type)
 				id = ""
+			} else {
+				switch table.DbTypes[table.IDColumn].Type {
+				case api.PGTypeText, api.PGTypeVarChar:
+					id = data[table.IDColumn].(string)
+				case api.PGTypeFloat8, api.PGTypeFloat4, api.PGTypeInt, api.PGTypeInt4, api.PGTypeInt8:
+					id = fmt.Sprintf("%f", data[table.IDColumn].(float64))
+				default:
+					log.Warnf("Listener received notification about table '%v' with unhandled id '%v' of type '%v'.",
+						collection, table.IDColumn, table.DbTypes[table.IDColumn].Type)
+					id = ""
+				}
 			}
 
 			if id != "" {
 				weakEtag := api.MakeWeakEtag(collection, id, notificationData.New_xmin, api.GetCurrentHttpDate())
-				weakEtag.Data = notificationData.Data
+				weakEtag.Data = data
 
 				// ===== DOUBLE ADD!!
-				_, err = listener.cache.AddWeakEtag(weakEtag.CacheKey(), weakEtag)
+				_, err := listener.cache.AddWeakEtag(weakEtag.CacheKey(), weakEtag)
 				if err != nil {
 					log.Warnf("Error adding weak Etag to cache: %v", err)
 				}
