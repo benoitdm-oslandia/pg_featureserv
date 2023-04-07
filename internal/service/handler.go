@@ -559,6 +559,14 @@ func getCreateItemSchema(ctx context.Context, table *api.Table) (openapi3.Schema
 }
 
 func getUpdateItemSchema(ctx context.Context, table *api.Table) (openapi3.Schema, error) {
+	// remove Z suffix if any
+	geomType := table.GeometryType
+	if strings.HasSuffix(table.GeometryType, "Z") || strings.HasSuffix(table.GeometryType, "z") {
+		geomType = strings.TrimSuffix(strings.TrimSuffix(geomType, "z"), "Z")
+	}
+	if api.GeojsonSchemaRefs[geomType] == nil {
+		return openapi3.Schema{}, fmt.Errorf("schema not valid: geometry '%v' is not handled!", table.GeometryType)
+	}
 	// Feature schema skeleton
 	var featureInfoSchema openapi3.Schema = openapi3.Schema{
 		Type: "object",
@@ -569,7 +577,7 @@ func getUpdateItemSchema(ctx context.Context, table *api.Table) (openapi3.Schema
 					Default: "Feature",
 				},
 			},
-			"geometry": api.GeojsonSchemaRefs[table.GeometryType],
+			"geometry": api.GeojsonSchemaRefs[geomType],
 			"properties": {
 				Value: &openapi3.Schema{},
 			},
