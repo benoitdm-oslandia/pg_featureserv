@@ -1044,7 +1044,7 @@ func makeGeojsonSchemaRefs() map[string]*openapi3.SchemaRef {
 	out := make(map[string]*openapi3.SchemaRef)
 
 	cl := http.Client{}
-	for _, g := range []string{"Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon"} {
+	for _, g := range []string{"Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon", "Geometry"} {
 		httpReq, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("https://geojson.org/schema/%v.json", g), nil)
 		resp, err := cl.Do(httpReq)
 		if err != nil {
@@ -1052,7 +1052,7 @@ func makeGeojsonSchemaRefs() map[string]*openapi3.SchemaRef {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode > 399 {
-			panic(fmt.Errorf("error loading: request returned status code %d", resp.StatusCode))
+			panic(fmt.Errorf("error loading: request for '%v' returned status code %d", g, resp.StatusCode))
 		}
 		body, _ := ioutil.ReadAll(resp.Body)
 
