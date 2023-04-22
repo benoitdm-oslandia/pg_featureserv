@@ -79,7 +79,7 @@ func InitRouter(basePath string) *mux.Router {
 		addRouteWithMethod(router, "/collections/{cid}/items/{fid}"+routeOptionalFormat, handleItem, "PATCH")
 		addRouteWithMethod(router, "/collections/{cid}/items/{fid}"+routeOptionalFormat, handleItem, "PUT")
 
-		addRoute(router, "/collections/{cid}/schema", handleCollectionSchemas)
+		addRoute(router, "/collections/{cid}/schema"+routeOptionalFormat, handleCollectionSchemas)
 	}
 
 	addRoute(router, "/collections/{cid}/items/{fid}"+routeOptionalFormat, handleItem)
@@ -330,7 +330,7 @@ func handleCollectionSchemas(w http.ResponseWriter, r *http.Request) *appError {
 
 	ctx := r.Context()
 	switch format {
-	case api.FormatSchemaJSON:
+	case api.FormatSchemaJSON, api.FormatJSON:
 		{
 			switch schemaType {
 			case "create", "replace":
