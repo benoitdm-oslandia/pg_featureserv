@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+	"github.com/CrunchyData/pg_featureserv/internal/data"
 	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -131,9 +132,9 @@ func (t *DbTests) TestReplaceComplexFeatureDb() {
 	t.Test.Run("TestReplaceComplexFeatureDb", func(t *testing.T) {
 		path := "/collections/complex.mock_multi/items/100"
 		var header = make(http.Header)
-		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
+		header.Add("Content-Type", api.ContentTypeGeoJSON)
 
-		feat := util.MakeGeojsonFeatureMockPoint(100, -50, 35)
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 100, -50, 35)
 		json, err := json.Marshal(feat)
 		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
 
@@ -144,14 +145,35 @@ func (t *DbTests) TestReplaceComplexFeatureDb() {
 	})
 }
 
+func (t *DbTests) TestReplaceAnyGeometryFeatureDb() {
+	t.Test.Run("TestReplaceAnyGeometryFeatureDb", func(t *testing.T) {
+		path := "/collections/public.mock_geom/items/10"
+
+		// check if it can be read
+		checkItemWithGeom(t, "public.mock_geom", 10, "Polygon")
+
+		var header = make(http.Header)
+		header.Add("Content-Type", api.ContentTypeGeoJSON)
+
+		feat := data.MakeApiFeatureWithPointForSimple("complex.mock_geom", 1000, -50, 35)
+		json, err := json.Marshal(feat)
+		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
+
+		_ = hTest.DoRequestMethodStatus(t, "PUT", path, json, header, http.StatusNoContent)
+
+		// check if it can be read
+		checkItemWithGeom(t, "public.mock_geom", 10, "Point")
+	})
+}
+
 func (t *DbTests) TestReplaceComplexFeatureDbCrs() {
 	t.Test.Run("TestReplaceComplexFeatureDbCrs", func(t *testing.T) {
 		path := "/collections/complex.mock_multi/items/100"
 		var header = make(http.Header)
-		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
+		header.Add("Content-Type", api.ContentTypeGeoJSON)
 		header.Add("Content-Crs", "2154")
 
-		feat := util.MakeGeojsonFeatureMockPoint(100, 657775, 6860705)
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 100, 657775, 6860705)
 		json, err := json.Marshal(feat)
 		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
 
@@ -166,10 +188,10 @@ func (t *DbTests) TestReplaceComplexFeatureDbWrongCrs() {
 	t.Test.Run("TestReplaceComplexFeatureDbWrongCrs", func(t *testing.T) {
 		path := "/collections/complex.mock_multi/items/100"
 		var header = make(http.Header)
-		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
+		header.Add("Content-Type", api.ContentTypeGeoJSON)
 		header.Add("Content-Crs", "3")
 
-		feat := util.MakeGeojsonFeatureMockPoint(100, 657775, 6860705)
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 100, 657775, 6860705)
 		json, err := json.Marshal(feat)
 		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
 

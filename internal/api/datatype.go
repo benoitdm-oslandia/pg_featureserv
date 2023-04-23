@@ -71,6 +71,7 @@ const (
 )
 
 const (
+	GeometryTypeGeometry        = "Geometry"
 	GeometryTypePoint           = "Point"
 	GeometryTypeMultiPoint      = "MultiPoint"
 	GeometryTypeLineString      = "LineString"

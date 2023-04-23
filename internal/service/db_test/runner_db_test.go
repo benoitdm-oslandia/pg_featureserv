@@ -77,6 +77,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test := DbTests{Test: t}
 		test.TestPropertiesAllFromDbSimpleTable()
 		test.TestPropertiesAllFromDbComplexTable()
+		test.TestGetAllForAnyGeometryTable()
 		test.TestGetFormatHandlingSuffix()
 		test.TestGetCrs()
 		test.TestGetWrongCrs()
@@ -93,6 +94,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test := DbTests{Test: t}
 		test.TestSimpleReplaceFeatureSuccessDb()
 		test.TestGetComplexCollectionReplaceSchema()
+		test.TestReplaceAnyGeometryFeatureDb()
 		test.TestReplaceComplexFeatureDb()
 		test.TestReplaceComplexFeatureDbCrs()
 		test.TestReplaceComplexFeatureDbWrongCrs()
@@ -105,6 +107,7 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestCreateSimpleFeatureDb()
 		test.TestCreateSuperSimpleFeatureDb()
 		test.TestCreateComplexFeatureDb()
+		test.TestCreateAnyGeometryFeatureDb()
 		test.TestGetComplexCollectionCreateSchema()
 		test.TestCreateFeatureCrsDb()
 		test.TestCreateFeatureWrongCrsDb()
@@ -117,8 +120,9 @@ func TestRunnerHandlerDb(t *testing.T) {
 		test.TestUpdateComplexFeatureDb()
 		test.TestUpdateSimpleFeatureDb()
 		test.TestUpdateSimpleFeatureNoPropDb()
-		test.TesUpdateComplexFeatureDbCrs()
-		test.TesUpdateComplexFeatureDbWrongCrs()
+		test.TestUpdateComplexFeatureDbCrs()
+		test.TestUpdateComplexFeatureDbWrongCrs()
+		test.TestUpdateAnyGeometryFeatureDb()
 		afterEachRun()
 	})
 	t.Run("CACHE-ETAGS", func(t *testing.T) {
@@ -205,7 +209,10 @@ func beforeEachRun() {
 	log.Debug("beforeEachRun")
 	// drop and create table
 	util.InsertSimpleDataset(db, "public")
+	util.InsertSuperSimpleDataset(db, "public", "mock_ssimple")
 	util.InsertComplexDataset(db, "complex")
+	util.InsertSuperSimpleDataset(db, util.SpecialSchemaStr, util.SpecialTableStr)
+
 }
 
 // Run after each test
@@ -217,6 +224,12 @@ func afterEachRun() {
 // Check if item is available and is not empty
 // (copy from service/handler_test.go)
 func checkItem(t *testing.T, tableName string, id int) []byte {
+	return checkItemWithGeom(t, tableName, id, "")
+}
+
+// Check if item is available and is not empty
+// (copy from service/handler_test.go)
+func checkItemWithGeom(t *testing.T, tableName string, id int, geomType string) []byte {
 	path := fmt.Sprintf("/collections/%v/items/%d", url.QueryEscape(tableName), id)
 	resp := hTest.DoRequest(t, path)
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -226,6 +239,9 @@ func checkItem(t *testing.T, tableName string, id int) []byte {
 	util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
 
 	util.Equals(t, "Feature", v.Type, "feature type")
+	if len(geomType) > 0 {
+		util.Equals(t, geomType, v.Geom.Type, "geometry type")
+	}
 
 	actId, _ := strconv.Atoi(v.ID)
 	util.Equals(t, id, actId, "feature id")

@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 	"time"
 
@@ -55,6 +56,52 @@ func (t *DbTests) TestPropertiesAllFromDbSimpleTable() {
 		util.Equals(t, 1.0, v.Features[0].Props["prop_b"], "feature 1 # property B")
 		util.Equals(t, "propC", v.Features[0].Props["prop_c"], "feature 1 # property C")
 		util.Equals(t, 1.0, v.Features[0].Props["prop_d"], "feature 1 # property D")
+	})
+}
+
+func (t *DbTests) TestGetAllForAnyGeometryTable() {
+	t.Test.Run("TestGetAllAnyGeometryTable", func(t *testing.T) {
+		limit := 10
+		rr := hTest.DoRequest(t, fmt.Sprintf("/collections/mock_geom/items?limit=%d", limit))
+
+		var v api.FeatureCollection
+		errUnMarsh := json.Unmarshal(hTest.ReadBody(rr), &v)
+		util.Assert(t, errUnMarsh == nil, fmt.Sprintf("%v", errUnMarsh))
+
+		// Note that JSON numbers are read as float64
+		util.Equals(t, limit, len(v.Features), "# features")
+
+		for i := 0; i < limit; i++ {
+			// first 9 features are Point
+			if i < 9 {
+				util.Equals(t, 4, len(v.Features[i].Props), fmt.Sprintf("feature #%d properties", i))
+
+				util.Equals(t, "propA", v.Features[i].Props["prop_a"], fmt.Sprintf("feature #%d property A", i))
+
+				util.Equals(t, "float64", reflect.TypeOf(v.Features[i].Props["prop_b"]).String(), fmt.Sprintf("feature #%d type of property B", i))
+				util.Equals(t, float64(i+1), v.Features[i].Props["prop_b"], fmt.Sprintf("feature #%d property B", i))
+
+				util.Equals(t, "propC", v.Features[i].Props["prop_c"], fmt.Sprintf("feature #%d property C", i))
+
+				util.Equals(t, "float64", reflect.TypeOf(v.Features[i].Props["prop_d"]).String(), fmt.Sprintf("feature #%d type of property B", i))
+				util.Equals(t, float64(i+1), v.Features[i].Props["prop_d"], fmt.Sprintf("feature #%d property D", i))
+
+				util.Equals(t, "Point", v.Features[i].Geom.Type, fmt.Sprintf("feature #%d geomtry type", i))
+			} else {
+				// then are the polygons starting with id 100
+				util.Equals(t, "propA", v.Features[i].Props["prop_a"], fmt.Sprintf("feature #%d property A", i))
+
+				util.Equals(t, "float64", reflect.TypeOf(v.Features[i].Props["prop_b"]).String(), fmt.Sprintf("feature #%d type of property B", i))
+				util.Equals(t, float64(i+91), v.Features[i].Props["prop_b"], fmt.Sprintf("feature #%d property B", i))
+
+				util.Equals(t, "propC", v.Features[i].Props["prop_c"], fmt.Sprintf("feature #%d property C", i))
+
+				util.Equals(t, "float64", reflect.TypeOf(v.Features[i].Props["prop_d"]).String(), fmt.Sprintf("feature #%d type of property B", i))
+				util.Equals(t, float64((i+91)%10), v.Features[i].Props["prop_d"], fmt.Sprintf("feature #%d property D", i))
+
+				util.Equals(t, "Polygon", v.Features[i].Geom.Type, fmt.Sprintf("feature #%d geomtry type", i))
+			}
+		}
 	})
 }
 

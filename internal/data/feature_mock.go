@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"strconv"
+	"time"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	orb "github.com/paulmach/orb"
@@ -32,57 +33,11 @@ type featureMock struct {
 	api.GeojsonFeatureData
 }
 
-func makeFeatureMockPoint(tableName string, id int, x float64, y float64) *featureMock {
-	geom := geojson.NewGeometry(orb.Point{x, y})
-
-	sum := fnv.New32a()
-	encodedContent, _ := json.Marshal(geom)
-	sum.Write(encodedContent)
-
-	httpDateString := api.GetCurrentHttpDate() // Last modified value
-
-	idstr := strconv.Itoa(id)
-
-	feat := featureMock{
-		GeojsonFeatureData: *api.MakeGeojsonFeature(
-			tableName,
-			idstr,
-			*geom,
-			map[string]interface{}{"prop_a": "propA", "prop_b": id, "prop_c": "propC", "prop_d": id % 10},
-			fmt.Sprint(sum.Sum32()),
-			httpDateString),
-	}
-	return &feat
-}
-
-func makeFeatureMockPolygon(tableName string, id int, coords orb.Ring) *featureMock {
-
-	geom := geojson.NewGeometry(orb.Polygon{coords})
-
-	sum := fnv.New32a()
-	encodedContent, _ := json.Marshal(geom)
-	sum.Write(encodedContent)
-	weakEtag := fmt.Sprint(sum.Sum32())
-
-	httpDateString := api.GetCurrentHttpDate() // Last modified value
-
-	idstr := strconv.Itoa(id)
-
-	feat := featureMock{
-		GeojsonFeatureData: *api.MakeGeojsonFeature(
-			tableName,
-			idstr,
-			*geom,
-			map[string]interface{}{"prop_a": "propA", "prop_b": id, "prop_c": "propC", "prop_d": id % 10},
-			weakEtag,
-			httpDateString,
-		),
-	}
-	return &feat
-}
-
 func (fm *featureMock) toJSON(propNames []string) string {
-	props := fm.extractProperties(propNames)
+	props := fm.Props
+	if propNames != nil {
+		props = fm.extractProperties(propNames)
+	}
 	return api.MakeGeojsonFeatureJSON("", fm.ID, *fm.Geom, props, fm.WeakEtag.Etag, fm.WeakEtag.LastModified)
 }
 
@@ -156,22 +111,46 @@ func doLimit(features []*featureMock, limit int, offset int) []*featureMock {
 	return features[start:end]
 }
 
-// Returns a JSON representation of a Point typed feature
-func MakeFeatureMockPointAsJSON(tableName string, id int, x float64, y float64, columns []string) string {
-	feat := makeFeatureMockPoint(tableName, id, x, y)
-	return feat.toJSON(columns)
+func MakeMockFromApiFeature(geojsonFeat *api.GeojsonFeatureData) *featureMock {
+	feat := featureMock{
+		GeojsonFeatureData: *geojsonFeat,
+	}
+	return &feat
 }
 
-// Returns a JSON representation of a Polygon typed feature
-func MakeFeatureMockPolygonAsJSON(tableName string, id int, coords orb.Ring, columns []string) string {
-	feat := makeFeatureMockPolygon(tableName, id, coords)
-	return feat.toJSON(columns)
+// make point feature for any table
+func MakeMock(tableName string, id int, geom *geojson.Geometry, cols map[string]interface{}) *featureMock {
+	sum := fnv.New32a()
+	encodedContent, _ := json.Marshal(geom)
+	sum.Write(encodedContent)
+
+	httpDateString := api.GetCurrentHttpDate() // Last modified value
+
+	idstr := strconv.Itoa(id)
+
+	feat := featureMock{
+		GeojsonFeatureData: *api.MakeGeojsonFeature(
+			tableName,
+			idstr,
+			*geom,
+			cols,
+			fmt.Sprint(sum.Sum32()),
+			httpDateString),
+	}
+	return &feat
 }
 
-// Generates and returns a slice of Point typed features
-// -> which coordinates are generated inside the provided extent
-// -> which quantity depends on the nx and ny values provided as arguments (nx*ny)
-func MakeFeaturesMockPoint(tableName string, extent api.Extent, nx int, ny int) []*featureMock {
+// make point feature for any table
+func MakeMockWithPoint(tableName string, id int, x float64, y float64, cols map[string]interface{}) *featureMock {
+	return MakeMock(tableName, id, geojson.NewGeometry(orb.Point{x, y}), cols)
+}
+
+// make polygon feature for any table
+func MakeMockWithPolygon(tableName string, id int, coords orb.Ring, cols map[string]interface{}) *featureMock {
+	return MakeMock(tableName, id, geojson.NewGeometry(orb.Polygon{coords}), cols)
+}
+
+func makeMocksWithPointFor(tableType string, tableName string, extent api.Extent, nx int, ny int) []*featureMock {
 	basex := extent.Minx
 	basey := extent.Miny
 	dx := (extent.Maxx - extent.Minx) / float64(nx)
@@ -185,7 +164,14 @@ func MakeFeaturesMockPoint(tableName string, extent api.Extent, nx int, ny int) 
 			id := index + 1
 			x := basex + dx*float64(ix)
 			y := basey + dy*float64(iy)
-			features[index] = makeFeatureMockPoint(tableName, id, x, y)
+
+			var feat *api.GeojsonFeatureData
+			if tableType == "simple" {
+				feat = MakeApiFeatureWithPointForSimple(tableName, id, x, y)
+			} else {
+				feat = MakeApiFeatureWithPointForMulti(tableName, id, x, y)
+			}
+			features[index] = MakeMockFromApiFeature(feat)
 
 			index++
 		}
@@ -193,8 +179,15 @@ func MakeFeaturesMockPoint(tableName string, extent api.Extent, nx int, ny int) 
 	return features
 }
 
+// Generates and returns a slice of Point typed features
+// -> which coordinates are generated inside the provided extent
+// -> which quantity depends on the nx and ny values provided as arguments (nx*ny)
+func MakeMocksWithPointForSimple(tableName string, extent api.Extent, nx int, ny int) []*featureMock {
+	return makeMocksWithPointFor("simple", tableName, extent, nx, ny)
+}
+
 // Returns a slice of Polygon typed featureMocks
-func MakeFeaturesMockPolygon(tableName string) []*featureMock {
+func MakeMocksWithPolygonForSimple(tableName string) []*featureMock {
 
 	polygons := make([]orb.Ring, 0)
 	polygons = append(polygons, (orb.Ring{{-0.024590485281003, 49.2918461864342}, {-0.02824214022877, 49.2902093052715}, {-0.032731597583892, 49.2940548086905}, {-0.037105514267367, 49.2982628947696}, {-0.035096222035489, 49.2991273714187}, {-0.038500457450357, 49.3032655348948}, {-0.034417965728768, 49.3047607558599}, {-0.034611922456059, 49.304982637632}, {-0.028287271276391, 49.3073904622151}, {-0.022094153540685, 49.3097046833446}, {-0.022020905508067, 49.3096240670749}, {-0.019932810088915, 49.3103884833526}, {-0.013617304476105, 49.3129751788625}, {-0.010317714854534, 49.3091925467367}, {-0.006352474569531, 49.3110873002743}, {-0.001853050940172, 49.3070612288807}, {0.002381370562776, 49.3028484930665}, {-0.000840217324783, 49.3013882187799}, {-0.00068928216257, 49.3012429006019}, {-0.003864625123604, 49.3000173218511}, {-0.003918013833785, 49.2999931219338}, {-0.010095065847337, 49.2974103246769}, {-0.010150643294152, 49.2974622610823}, {-0.013587537856462, 49.2959737733625}, {-0.01384030494609, 49.2962233671643}, {-0.017222409797967, 49.294623513139}, {-0.017308576106142, 49.2947057553981}, {-0.020709238582055, 49.2930969232562}, {-0.021034503634088, 49.2933909821512}, {-0.024481057600533, 49.2917430023163}, {-0.024590485281003, 49.2918461864342}}))
@@ -205,8 +198,79 @@ func MakeFeaturesMockPolygon(tableName string) []*featureMock {
 
 	features := make([]*featureMock, 0)
 	for _, coords := range polygons {
-		feature := makeFeatureMockPolygon(tableName, id, coords)
-		features = append(features, feature)
+		feature := MakeApiFeatureWithPolygonForSimple(tableName, id, coords)
+		features = append(features, MakeMockFromApiFeature(feature))
+		id++
 	}
 	return features
+}
+
+// Generates and returns a slice of Point typed features
+// -> which coordinates are generated inside the provided extent
+// -> which quantity depends on the nx and ny values provided as arguments (nx*ny)
+func MakeMocksWithPointForMulti(tableName string, extent api.Extent, nx int, ny int) []*featureMock {
+	return makeMocksWithPointFor("multi", tableName, extent, nx, ny)
+}
+
+// make feature for mock_multi table
+func MakeApiFeatureWithPointForMulti(tableName string, id int, x float64, y float64) *api.GeojsonFeatureData {
+	idstr := strconv.Itoa(id)
+	props := make(map[string]interface{})
+	props["prop_t"] = idstr
+	props["prop_i"] = id
+	props["prop_l"] = int64(id)
+	props["prop_f"] = float64(id)
+	props["prop_r"] = float32(id)
+	props["prop_b"] = []bool{id%2 == 0, id%2 == 1}
+	props["prop_d"] = time.Now()
+	props["prop_j"] = api.Sorting{Name: idstr, IsDesc: id%2 == 1}
+	props["prop_v"] = idstr
+
+	feat := MakeMockWithPoint(tableName, id, x, y, props)
+
+	return &feat.GeojsonFeatureData
+}
+
+// make feature for mock simple tables
+func MakeApiFeatureWithPointForSimple(tableName string, id int, x float64, y float64) *api.GeojsonFeatureData {
+	props := make(map[string]interface{})
+	props["prop_a"] = "propA"
+	props["prop_b"] = id
+	props["prop_c"] = "propC"
+	props["prop_d"] = id % 10
+
+	feat := MakeMockWithPoint(tableName, id, x, y, props)
+
+	return &feat.GeojsonFeatureData
+}
+
+// make feature for mock simple tables
+func MakeApiFeatureWithPolygonForSimple(tableName string, id int, coords orb.Ring) *api.GeojsonFeatureData {
+	props := make(map[string]interface{})
+	props["prop_a"] = "propA"
+	props["prop_b"] = id
+	props["prop_c"] = "propC"
+	props["prop_d"] = id % 10
+
+	feat := MakeMockWithPolygon(tableName, id, coords, props)
+
+	return &feat.GeojsonFeatureData
+}
+
+// Returns a JSON representation of a Point typed feature
+func MakeJSONWithPointForSimple(tableName string, id int, x float64, y float64) string {
+	feat := MakeApiFeatureWithPointForSimple(tableName, id, x, y)
+	return MakeMockFromApiFeature(feat).toJSON(nil)
+}
+
+// Returns a JSON representation of a Polygon typed feature
+func MakeJSONWithPolygonForSimple(tableName string, id int, coords orb.Ring) string {
+	feat := MakeApiFeatureWithPolygonForSimple(tableName, id, coords)
+	return MakeMockFromApiFeature(feat).toJSON(nil)
+}
+
+// Returns a JSON representation of a Point typed feature
+func MakeJSONWithPointForMulti(tableName string, id int, x float64, y float64) string {
+	feat := MakeApiFeatureWithPointForMulti(tableName, id, x, y)
+	return MakeMockFromApiFeature(feat).toJSON(nil)
 }

@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
+	"github.com/CrunchyData/pg_featureserv/internal/data"
 	util "github.com/CrunchyData/pg_featureserv/internal/utiltest"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/jackc/pgx/v4"
@@ -76,7 +77,7 @@ func (t *DbTests) TestUpdateSimpleFeatureDb() {
 }
 
 func (t *DbTests) TestUpdateSimpleFeatureNoPropDb() {
-	t.Test.Run("TestUpdateSimpleFeatureDb", func(t *testing.T) {
+	t.Test.Run("TestUpdateSimpleFeatureNoPropDb", func(t *testing.T) {
 		path := "/collections/mock_a/items/3"
 		var header = make(http.Header)
 		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
@@ -154,26 +155,7 @@ func (t *DbTests) TestUpdateComplexFeatureDb() {
 		var header = make(http.Header)
 		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
 
-		feat := util.MakeGeojsonFeatureMockPoint(99999, -50, 35)
-		jsonObj, err := json.Marshal(feat)
-		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
-		jsonStr := string(jsonObj)
-
-		_ = hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusNoContent)
-
-		// check if it can be read
-		checkItem(t, "complex.mock_multi", 100)
-	})
-}
-
-func (t *DbTests) TesUpdateComplexFeatureDbCrs() {
-	t.Test.Run("TesUpdateComplexFeatureDbCrs", func(t *testing.T) {
-		path := "/collections/complex.mock_multi/items/100"
-		var header = make(http.Header)
-		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
-		header.Add("Content-Crs", "2154")
-
-		feat := util.MakeGeojsonFeatureMockPoint(99999, 657775, 6860705)
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 99999, -50, 35)
 		json, err := json.Marshal(feat)
 		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
 
@@ -184,14 +166,60 @@ func (t *DbTests) TesUpdateComplexFeatureDbCrs() {
 	})
 }
 
-func (t *DbTests) TesUpdateComplexFeatureDbWrongCrs() {
-	t.Test.Run("TesUpdateComplexFeatureDbWrongCrs", func(t *testing.T) {
+func (t *DbTests) TestUpdateAnyGeometryFeatureDb() {
+	t.Test.Run("TestUpdateAnyGeometryFeatureDb", func(t *testing.T) {
+		path := "/collections/public.mock_geom/items/10"
+
+		// check if it can be read
+		checkItemWithGeom(t, "public.mock_geom", 10, "Polygon")
+
+		var header = make(http.Header)
+		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
+
+		// change geometry type only
+		jsonStr := `{
+			"type": "Feature",
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+				-120,
+				40
+				]
+			}
+		}`
+		_ = hTest.DoRequestMethodStatus(t, "PATCH", path, []byte(jsonStr), header, http.StatusNoContent)
+
+		// check if it can be read
+		checkItemWithGeom(t, "public.mock_geom", 10, "Point")
+	})
+}
+
+func (t *DbTests) TestUpdateComplexFeatureDbCrs() {
+	t.Test.Run("TestUpdateComplexFeatureDbCrs", func(t *testing.T) {
+		path := "/collections/complex.mock_multi/items/100"
+		var header = make(http.Header)
+		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
+		header.Add("Content-Crs", "2154")
+
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 99999, 657775, 6860705)
+		json, err := json.Marshal(feat)
+		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
+
+		_ = hTest.DoRequestMethodStatus(t, "PATCH", path, json, header, http.StatusNoContent)
+
+		// check if it can be read
+		checkItem(t, "complex.mock_multi", 100)
+	})
+}
+
+func (t *DbTests) TestUpdateComplexFeatureDbWrongCrs() {
+	t.Test.Run("TestUpdateComplexFeatureDbWrongCrs", func(t *testing.T) {
 		path := "/collections/complex.mock_multi/items/100"
 		var header = make(http.Header)
 		header.Add("Content-Type", api.ContentTypeSchemaPatchJSON)
 		header.Add("Content-Crs", "3")
 
-		feat := util.MakeGeojsonFeatureMockPoint(99999, 657775, 6860705)
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 99999, 657775, 6860705)
 		json, err := json.Marshal(feat)
 		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
 

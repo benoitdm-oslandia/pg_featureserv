@@ -20,16 +20,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/CrunchyData/pg_featureserv/internal/api"
 	"github.com/CrunchyData/pg_featureserv/internal/conf"
 	"github.com/CrunchyData/pg_featureserv/internal/data"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/geojson"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -97,6 +93,7 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 		"mock_a":    {api.GeometryTypePoint, api.Extent{Minx: -120, Miny: 40, Maxx: -74, Maxy: 50}, 3, 3},
 		"mock_b":    {api.GeometryTypePoint, api.Extent{Minx: -75, Miny: 45, Maxx: -74, Maxy: 46}, 10, 10},
 		"mock_c":    {api.GeometryTypePoint, api.Extent{Minx: -120, Miny: 40, Maxx: -74, Maxy: 60}, 100, 100},
+		"mock_geom": {api.GeometryTypeGeometry, api.Extent{Minx: -120, Miny: 40, Maxx: -74, Maxy: 50}, 3, 3},
 		"mock_poly": {api.GeometryTypePolygon, api.Extent{}, 0, 0},
 	}
 
@@ -137,18 +134,20 @@ func InsertSimpleDataset(db *pgxpool.Pool, schema string) {
 		tableNameWithSchema := pgx.Identifier{schema, tableName}.Sanitize()
 		insertStatement := fmt.Sprintf(string(insertBytes), tableNameWithSchema)
 
-		switch tableElements.geometryType {
-		case api.GeometryTypePoint:
-			for _, feat := range data.MakeFeaturesMockPoint(tableName, tableElements.extent, tableElements.nx, tableElements.ny) {
-				geomStr, _ := feat.Geom.MarshalJSON()
-				b.Queue(insertStatement, geomStr, feat.Props["prop_a"], feat.Props["prop_b"], feat.Props["prop_c"], feat.Props["prop_d"])
-			}
-		case api.GeometryTypePolygon:
-			for _, feat := range data.MakeFeaturesMockPolygon(tableNameWithSchema) {
+		if tableElements.geometryType == api.GeometryTypePoint || tableElements.geometryType == api.GeometryTypeGeometry {
+			for _, feat := range data.MakeMocksWithPointForSimple(tableName, tableElements.extent, tableElements.nx, tableElements.ny) {
 				geomStr, _ := feat.Geom.MarshalJSON()
 				b.Queue(insertStatement, geomStr, feat.Props["prop_a"], feat.Props["prop_b"], feat.Props["prop_c"], feat.Props["prop_d"])
 			}
 		}
+
+		if tableElements.geometryType == api.GeometryTypePolygon || tableElements.geometryType == api.GeometryTypeGeometry {
+			for _, feat := range data.MakeMocksWithPolygonForSimple(tableNameWithSchema) {
+				geomStr, _ := feat.Geom.MarshalJSON()
+				b.Queue(insertStatement, geomStr, feat.Props["prop_a"], feat.Props["prop_b"], feat.Props["prop_c"], feat.Props["prop_d"])
+			}
+		}
+
 		res := db.SendBatch(ctx, b)
 		if res == nil {
 			CloseTestDb(db)
@@ -209,7 +208,7 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 	for tableName, tableElements := range tablesAndExtents {
 		tableNameWithSchema := pgx.Identifier{schema, tableName}.Sanitize()
 		insertStatement := fmt.Sprintf(string(insertBytes), tableNameWithSchema)
-		featuresMock := data.MakeFeaturesMockPoint(tableName, tableElements.extent, tableElements.nx, tableElements.ny)
+		featuresMock := data.MakeMocksWithPointForSimple(tableName, tableElements.extent, tableElements.nx, tableElements.ny)
 
 		for i, f := range featuresMock {
 			geomStr, _ := f.Geom.MarshalJSON()
@@ -226,26 +225,6 @@ func InsertSuperSimpleDataset(db *pgxpool.Pool, schema string, tablename string)
 			log.Fatal(fmt.Sprintf("Injection failed: %v", resClose.Error()))
 		}
 	}
-}
-
-func MakeGeojsonFeatureMockPoint(id int, x float64, y float64) *api.GeojsonFeatureData {
-
-	geom := geojson.NewGeometry(orb.Point{x, y})
-	idstr := strconv.Itoa(id)
-	props := make(map[string]interface{})
-	props["prop_t"] = idstr
-	props["prop_i"] = id
-	props["prop_l"] = int64(id)
-	props["prop_f"] = float64(id)
-	props["prop_r"] = float32(id)
-	props["prop_b"] = []bool{id%2 == 0, id%2 == 1}
-	props["prop_d"] = time.Now()
-	props["prop_j"] = api.Sorting{Name: idstr, IsDesc: id%2 == 1}
-	props["prop_v"] = idstr
-
-	feat := api.GeojsonFeatureData{Type: "Feature", ID: idstr, Geom: geom, Props: props}
-
-	return &feat
 }
 
 func InsertComplexDataset(db *pgxpool.Pool, schema string) {
@@ -276,16 +255,11 @@ func InsertComplexDataset(db *pgxpool.Pool, schema string) {
 		log.Fatal(errExec)
 	}
 
-	n := 5.0
-	features := make([]*api.GeojsonFeatureData, int((n*2)*(n*2)))
-	id := 1
-	for ix := -n; ix < n; ix++ {
-		for iy := -n; iy < n; iy++ {
-			feat := MakeGeojsonFeatureMockPoint(id, ix, iy)
-			features[id-1] = feat
-			id++
-		}
-	}
+	tableNameWithSchema := fmt.Sprintf("%s.mock_multi", cleanedSchema)
+	features := data.MakeMocksWithPointForMulti(
+		tableNameWithSchema,
+		api.Extent{Minx: -75, Miny: 45, Maxx: -74, Maxy: 46},
+		10, 10)
 
 	b := &pgx.Batch{}
 	sqlStatement := fmt.Sprintf(`
