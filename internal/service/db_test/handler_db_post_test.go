@@ -67,8 +67,7 @@ func (t *DbTests) TestCreateSimpleFeatureDb() {
 		maxIdBefore := len(features)
 
 		tableName := "public.mock_a"
-		cols := generateJsonFromNewObject(tableName)
-		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 12, 34, cols)
+		jsonStr := data.MakeJSONWithPointForSimple(tableName, 99, 12, 34)
 
 		// -- do the request call but we have to force the catalogInstance to db during this operation
 		rr := hTest.DoPostRequest(t, "/collections/mock_a/items", []byte(jsonStr), header)
@@ -96,11 +95,24 @@ func (t *DbTests) TestCreateSuperSimpleFeatureDb() {
 
 		//--- generate json from new object
 		tableName := "public.mock_ssimple"
-		var cols []string
-		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 12, 34, cols)
+		jsonStr := data.MakeJSONWithPointForSimple(tableName, 99, 12, 34)
 
 		// -- do the request call but we have to force the catalogInstance to db during this operation
 		hTest.DoPostRequest(t, "/collections/mock_ssimple/items", []byte(jsonStr), header)
+	})
+}
+
+func (t *DbTests) TestCreateAnyGeometryFeatureDb() {
+	t.Test.Run("TestCreateAnyGeometryFeatureDb", func(t *testing.T) {
+		var header = make(http.Header)
+		header.Add("Content-Type", "application/geo+json")
+
+		//--- generate json from new object
+		tableName := "public.mock_geom"
+		jsonStr := data.MakeJSONWithPointForSimple(tableName, 99, 12, 34)
+
+		// -- do the request call but we have to force the catalogInstance to db during this operation
+		hTest.DoPostRequest(t, fmt.Sprintf("/collections/%s/items", tableName), []byte(jsonStr), header)
 	})
 }
 
@@ -166,7 +178,7 @@ func (t *DbTests) TestCreateComplexFeatureDb() {
 		maxIdBefore := len(features)
 
 		//--- generate json from new object
-		feat := util.MakeGeojsonFeatureMockPoint(99999, -50, 35)
+		feat := data.MakeApiFeatureWithPointForMulti("complex.mock_multi", 99999, -50, 35)
 		json, err := json.Marshal(feat)
 		util.Assert(t, err == nil, fmt.Sprintf("Error marshalling feature into JSON: %v", err))
 
@@ -195,8 +207,7 @@ func (t *DbTests) TestCreateFeatureCrsDb() {
 		header.Add("Content-Crs", "2154")
 
 		tableName := "public.mock_a"
-		cols := generateJsonFromNewObject(tableName)
-		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 657775, 6860705, cols)
+		jsonStr := data.MakeJSONWithPointForSimple(tableName, 99, 657775, 6860705)
 
 		// -- do the request call but we have to force the catalogInstance to db during this operation
 		rr := hTest.DoPostRequest(t, "/collections/mock_a/items", []byte(jsonStr), header)
@@ -222,27 +233,10 @@ func (t *DbTests) TestCreateFeatureWrongCrsDb() {
 		header.Add("Content-Crs", "3")
 
 		tableName := "public.mock_a"
-		cols := generateJsonFromNewObject(tableName)
-		jsonStr := data.MakeFeatureMockPointAsJSON(tableName, 99, 657775, 6860705, cols)
+		jsonStr := data.MakeJSONWithPointForSimple(tableName, 99, 657775, 6860705)
 
 		// -- do the request call but we have to force the catalogInstance to db during this operation
 		hTest.DoRequestMethodStatus(t, "POST", "/collections/mock_a/items", []byte(jsonStr), header, http.StatusBadRequest)
 
 	})
-}
-
-func generateJsonFromNewObject(tableName string) []string {
-	tables, _ := cat.Tables()
-	var cols []string
-	for _, tbl := range tables {
-		if tbl.ID == tableName {
-			for _, c := range tbl.Columns {
-				if c != "id" {
-					cols = append(cols, c)
-				}
-			}
-			break
-		}
-	}
-	return cols
 }
